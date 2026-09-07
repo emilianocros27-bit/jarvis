@@ -53,7 +53,11 @@ ACTIVE_MODEL = "sonnet"
 PENDING_DELETION = None  # {"slug", "name", "expires_at"}
 PENDING_DELETION_TTL_SECONDS = 120
 
-PORT = 4700
+# Cloud hosts provide PORT dynamically.  Keeping the localhost default makes
+# local runs private while allowing `python server.py` to work on Render,
+# Railway, and similar services without a separate command.
+PORT = int(os.environ.get("PORT", "4700"))
+HOST = os.environ.get("HOST", "0.0.0.0" if "PORT" in os.environ else "127.0.0.1")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DIRECTORY = os.path.join(BASE_DIR, "viewer")
 MEMORY_CAP = 500
@@ -2330,10 +2334,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 def main():
     workspaces.ensure_migrated()
     socketserver.TCPServer.allow_reuse_address = True
-    # localhost-only: /files-read can return real file content from the
-    # user's Desktop/Documents, so this must not be reachable from the LAN
-    with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
-        print(f"Serving {DIRECTORY} at http://localhost:{PORT}")
+    # Local runs remain localhost-only; a cloud host supplies PORT and binds
+    # to all interfaces so its proxy can reach the app.
+    with socketserver.TCPServer((HOST, PORT), Handler) as httpd:
+        print(f"Serving {DIRECTORY} at http://{HOST}:{PORT}")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
