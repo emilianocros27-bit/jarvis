@@ -1,0 +1,38 @@
+{
+  "active_slug": "node-modules",
+  "workspaces": [
+    {
+      "slug": "default",
+      "name": "Default",
+      "source_label": "/Users/angelesmoralesaguirre/Desktop/jarvis/notes",
+      "created": "2026-08-26T21:04:27",
+      "hub_pos": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "slug": "node-modules",
+      "name": "DUNK",
+      "source_label": "node_modules",
+      "created": "2026-08-26T21:16:32",
+      "hub_pos": {
+        "x": 282.842712474619,
+        "y": 0,
+        "z": 282.84271247461896
+      }
+    },
+    {
+      "slug": "node-modules-2",
+      "name": "node_modules",
+      "source_label": "node_modules",
+      "created": "2026-08-27T00:13:27",
+      "hub_pos": {
+        "x": 2.4492935982947064e-14,
+        "y": 0,
+        "z": 400.0
+      }
+    }
+  ]
+}

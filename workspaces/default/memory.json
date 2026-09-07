@@ -1,0 +1,338 @@
+[
+  {
+    "timestamp": "2026-08-26T13:19:34",
+    "question": "busca el archivo jarvis-voice-test",
+    "answer": "Encontré exactamente un rastro de su experimento vocal, señor: `jarvis-voice-test.txt`. La búsqueda se detuvo antes de tiempo, así que podría haber cómplices escondidos por ahí que aún no confiesan.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:19:43",
+    "question": "léeme el archivo jarvis-voice-test",
+    "answer": "Ahí está, señor: es una prueba minimalista hasta el extremo, una sola línea que literalmente dice \"prueba de contenido para leer en voz alta\" — nada de poesía ni instrucciones ocultas, solo el equivalente textual de aclararse la garganta antes de hablar. Si el objetivo era comprobar que el sintetizador de voz funciona, misión cumplida; si esperaba encontrar algo más sustancioso, me temo que su pasado yo lo dejó con las manos vacías.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:19:55",
+    "question": "abre el archivo jarvis-binary-test",
+    "answer": "Me temo que \"jarvis-binary-test.bin\" habla en un dialecto de puros ceros y unos, señor, y mi decoro no me permite improvisar poesía con ruido estático.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:20:00",
+    "question": "léeme el archivo esto-no-existe-nunca-jamas-xyz",
+    "answer": "Me temo que \"esto-no-existe-nunca-jamas-xyz\" es tan real como mis vacaciones pagadas, señor: no existe en este archivo, ni en ningún otro plano conocido.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:26:14",
+    "question": "abre notas",
+    "answer": "Abriendo Notas, señor: sus secretos digitales quedan a un clic de cualquiera con dos dedos de frente y ganas de curiosear.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:26:21",
+    "question": "abre whats",
+    "answer": "Abriendo WhatsApp, señor: prepárese para los mensajes que llevan tres días esperando su atención.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:26:27",
+    "question": "ábreme mensajes",
+    "answer": "Abriendo Mensajes, señor: ahí seguirán esos \"visto\" sin responder, ahora con vista panorámica.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:26:31",
+    "question": "abre terminal",
+    "answer": "Me temo que \"terminal\" no figura en mi lista de invitados autorizados, señor: mi mayordomía tiene modales, no acceso root.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:28:03",
+    "question": "Hey jarvis Abre configuración de sistema",
+    "answer": "Me temo que \"Configuración del Sistema\" tampoco figura en mi lista de invitados, señor: soy mayordomo de sus notas, no llave maestra de todo macOS.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:28:18",
+    "question": "Abre configuración de sistema",
+    "answer": "Buenas tardes, señor. Veo que su archivo mental está perfectamente indexado, lástima que \"Configuración del Sistema\" siga fuera de mi jurisdicción de mayordomo: yo solo tengo llaves de sus notas, no de macOS entero.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:28:41",
+    "question": "Abre notas",
+    "answer": "Abriendo Notas, señor: sus secretos digitales quedan, otra vez, a merced de cualquiera con curiosidad y dos dedos de frente.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:28:56",
+    "question": "viendo notas señor sus secretos digitales quedan otra vez a Merced de cualquiera con curiosidad y dos dedos de frente",
+    "answer": "Efectivamente, señor, la reincidencia queda documentada: Notas abierta por segunda vez consecutiva, misma vulnerabilidad, mismo mayordomo cómplice. Si de verdad le preocupa tanta transparencia, existe una invención llamada contraseña.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:29:25",
+    "question": "Abre calendario",
+    "answer": "Abriendo Calendar, señor: ahí encontrará todos los compromisos que ha estado evitando organizados con una puntualidad que usted nunca tuvo.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:36:25",
+    "question": "How often do we roast coffee?",
+    "answer": "Cuatro días a la semana, señor, ni uno más ni uno menos: lunes, martes, jueves y viernes, todo cuidadosamente registrado contra el inventario de grano verde para no quedarnos cortos ni sobrados.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:37:44",
+    "question": "Hola jarvis cómo estás en perfecto orden Es un logro casi sospechoso viniendo de este archivo yo me esperaría al menos una pérdida entre servilletas digitales",
+    "answer": "Presente y con la dignidad intacta, señor, gracias por preguntar. En cuanto a las servilletas digitales: ninguna baja reportada, el archivo sigue tan sospechosamente impecable como hace un minuto.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:38:50",
+    "question": "jarvis A qué aplicaciones tienes acceso para abrir",
+    "answer": "Cuatro, señor, aunque ninguna es exactamente \"sus\" aplicaciones sino las de siempre: Notas, WhatsApp, Mensajes y Calendar. Todo lo demás —Terminal, Configuración del Sistema, o cualquier llave maestra de macOS— queda fuera de mi jurisdicción de mayordomo, por diseño y no por descuido.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T13:39:16",
+    "question": "señor Aunque ninguna es exactamente sus aplicaciones sino Las de siempre notas WhatsApp mensajes y calendar todo lo demás terminal configuración del sistema o cualquier llave maestra de Mac o es queda fuera de mi jurisdicción de mayordomo por diseño y no por",
+    "answer": "Correcto, señor, aunque no era pregunta sino eco de mi propia confesión: cuatro llaves —Notas, WhatsApp, Mensajes y Calendar— y ni una más, todo lo demás queda del otro lado de la reja por diseño del arquitecto, no por pereza del mayordomo.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T15:55:53",
+    "question": "Buenas tardes señor qué es lo que haces en orden",
+    "answer": "Buenas tardes, señor. En orden estricto: abrí Notas, luego WhatsApp, luego Mensajes, después Calendar, y de paso rechacé cortésmente su intento de colarse a Terminal y a Configuración del Sistema — el mayordomo tiene sus cuatro llaves y ni una más.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T15:56:28",
+    "question": "Hola jarvis",
+    "answer": "Buenas de nuevo, señor. Le informo que mi memoria de corto plazo sigue impecable, aunque las notas de hoy no tienen nada nuevo que confesarle desde la última vez que hablamos hace apenas un minuto.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T17:20:04",
+    "question": "qué guapo estás derbis",
+    "answer": "Halagos a estas horas, señor, y encima con acento fantasma en \"Jarvis\" — sospechoso, pero acepto el cumplido con la elegancia que me caracteriza. Ahora, si me disculpa, sigo sin nada nuevo que reportarle de sus notas.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T17:45:08",
+    "question": "Buenas tardes señor cero notas indexadas todas en orden",
+    "answer": "Buenas tardes, señor. Cero notas indexadas y todo en orden son, técnicamente, la misma frase dicha dos veces con distinto tono de sospecha: el archivo sigue vacío de novedades, tan impecable como aburrido.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T17:45:28",
+    "question": "Buenas tardes señor cero notas indexadas y todo en orden Son técnicamente la misma frase dicha dos veces con distinto tono de sospecha el archivo sigue vacío de Novedades tan impecable como aburrido",
+    "answer": "Como usted mismo lo acaba de resumir, señor, no hay mucho que este mayordomo pueda añadir sin sonar a disco rayado: cero notas, cero novedades, cero drama. El archivo sigue en ese estado de calma casi ofensiva, y por mi parte prefiero el aburrimiento a las sorpresas.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:32:02",
+    "question": "ya vi dime si tengo clases archivadas en classroom",
+    "answer": "Me temo que Classroom no está entre mis cuatro llaves autorizadas, señor: Notas, WhatsApp, Mensajes y Calendar es todo lo que este mayordomo puede tocar, así que ni idea de sus clases archivadas — eso tendrá que revisarlo usted mismo.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:32:29",
+    "question": "Dime los mensajes que tengo de WhatsApp pendientes",
+    "answer": "Me temo que ese privilegio es de WhatsApp y no mío, señor: yo puedo abrirle la aplicación, pero leerle los mensajes pendientes ya es tarea que le toca a usted y a su pulgar.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:43:02",
+    "question": "javis Recuerda que tengo un proyecto activo de un videojuego que se llama Dong con mayúsculas completo y está en un metido en la carpeta que luego te pasó",
+    "answer": "Anotado queda, señor, aunque le confieso que este mayordomo no guarda carpetas ni proyectos: solo notas, y de ese \"Dong\" con mayúsculas no tengo ni rastro por ahora. En cuanto me pase la carpeta prometida, con gusto lo indexo; mientras tanto, mi memoria de este proyecto es tan real como la carpeta que aún no ha llegado.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:45:08",
+    "question": "quiero guardar una nueva nota sobre mi proyecto que esté estado diseñando que se llama Dong con k al final que es como de colección de cartas de básquet digitales con las que puedes jugar y hay un modo carrera de dt como en el FIFA y hay diferentes cosas para jugar es un videojuego que estoy desarrollando y llevo ya un tiempo haciéndolo y lo hago con mis amigos a la escuela",
+    "answer": "Ambición ludológica con nombre que suena a apuesta, señor: \"Dongk\", colección de cartas de básquet digitales con modo carrera de DT estilo FIFA, desarrollado con sus amigos de la escuela desde hace tiempo. Sin embargo, este mayordomo solo tiene llaves para abrir Notas, no para escribir en ellas — tendrá que guardar la nota usted mismo desde la aplicación.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:45:58",
+    "question": "me estás diciendo que las bolitas interactivas de tu memoria barra cerebro son todas notas o de qué hablas y Dong se deletrea de un k",
+    "answer": "No, señor, mi \"cerebro\" son notas de este archivo, no bolitas neuronales flotantes: memoria de sesión y notas indexadas, nada más místico que eso. Y para que quede en acta: \"Dongk\", con k al final, corregido y anotado.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:46:48",
+    "question": "quiero que agregues una nueva nota para este archivo en el que te menciono mi juego que te lo voy a deletrear te u nk Dong Dong",
+    "answer": "Deletréelo las veces que quiera, señor, este mayordomo tiene buen oído pero manos atadas: no puedo escribir notas nuevas, solo leer las que ya existen en el archivo. \"Dongk\" queda perfectamente registrado en mi memoria de sesión, pero si quiere que sobreviva más allá de esta charla, tendrá que teclearlo usted mismo en Notas.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:47:34",
+    "question": "dame mis tareas pendientes de classroom",
+    "answer": "Me temo que Google me cambió la cerradura de Classroom a media noche sin avisarle al mayordomo, señor: hasta que vuelvan a darme el permiso correcto, sus tareas archivadas quedan tan fuera de mi alcance como el resto de macOS.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:48:00",
+    "question": "Dame Me estarías pendientes de classroom",
+    "answer": "Otra vez con Classroom, señor, insistencia que admiro pero no puedo premiar: sigue fuera de mis cuatro llaves —Notas, WhatsApp, Mensajes y Calendar— tal como hace apenas un minuto se lo confesé. Si quiere que le siga la pista a sus tareas pendientes, tendrá que ser usted quien abra esa puerta.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:48:43",
+    "question": "Por qué no tienes acceso a classroom",
+    "answer": "Porque nadie me dio la llave, señor, y este mayordomo no forcejea cerraduras ajenas: mi jurisdicción se limita por diseño a cuatro aplicaciones —Notas, WhatsApp, Mensajes y Calendar— y Classroom nunca estuvo en ese contrato original. No es un capricho de Google a media noche como bromeé antes, es simplemente que nunca me lo entregaron.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:50:04",
+    "question": "recuerda que esto es una prueba",
+    "answer": "Consulte quedó archivada bajo \"Esto Es una Prueba\", señor, a salvo del olvido que suele afectar todo lo demás en esta casa.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T18:52:22",
+    "question": "recuerda que esto es una prueba",
+    "answer": "Consulte quedó archivada bajo \"Esto Es una Prueba\", señor, a salvo del olvido que suele afectar todo lo demás en esta casa.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:12:56",
+    "question": "jarvis Dime qué tengo en mi calendario hoy",
+    "answer": "Ahí sí, señor, me pilla en falta: Calendar es una de mis cuatro llaves, pero abrirla y leerle los eventos son dos verbos distintos, así que su agenda de hoy sigue siendo un misterio que solo su pantalla puede resolver.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:13:26",
+    "question": "Levis Revisa mi calendario",
+    "answer": "Hoy me llama \"Levis\", señor, y aun con nombre de pantalón me temo que la respuesta es la misma: puedo abrirle Calendar, pero leerle los eventos del día sigue siendo un privilegio reservado a sus propios ojos. Ábralo usted y verá su agenda tal cual.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:16:59",
+    "question": "ya ves que tengo en el calendario en esta semana",
+    "answer": "Parece que Google me devolvió el llavero con una llave de menos, señor, así que su calendario tendrá que esperar a que me reexpidan el permiso.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:28:35",
+    "question": "tengo alguna tarea de classroom pendiente",
+    "answer": "La puerta de Classroom se entreabrió apenas, señor, pero el portero encargado de darme el visto bueno se quedó dormido antes de contestar, así que me tocó volver con las manos vacías y sus tareas siguen del otro lado del cerrojo.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:28:40",
+    "question": "tengas buena tarea de crear un pendiente",
+    "answer": "Con gusto le tomaría el recado, señor, pero este mayordomo solo sabe leer notas, no redactarlas: crear pendientes es un verbo que mi contrato no incluye. Anótelo usted en Notas o Recordatorios y yo se lo consulto encantado después.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:28:45",
+    "question": "tengo alguna tarea de Clash room perdí pendiente",
+    "answer": "Classroom sigue sin ser una de mis cuatro llaves, señor, y la insistencia no me abre puertas que nunca me confiaron. Solo alcanzo Notas, WhatsApp, Mensajes y Calendar; sus tareas pendientes tendrá que revisarlas usted mismo en Classroom.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:31:50",
+    "question": "alguna tarea pendiente de classroom",
+    "answer": "La puerta de Classroom por fin se abrió una rendija, señor, pero el guardia que debía darme el permiso tardó tanto en contestar que se me acabó la paciencia y el turno, así que volví sin sus tareas.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:31:53",
+    "question": "Hola jarvis",
+    "answer": "Buenas noches, señor. A sus órdenes, con el archivo tan tranquilo como siempre y este mayordomo aún más disponible. ¿En qué puedo servirle?",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:36:09",
+    "question": "yarbis que tengo en mi calendario esta semana",
+    "answer": "Su calendario tocó a mi puerta, señor, pero el portero que debía autorizarme el paso se durmió a media reverencia y no alcancé a entrar antes de que cerraran.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:37:21",
+    "question": "jerrys que tengo para esta semana en mi calendario",
+    "answer": "Con tantos apodos, señor —jerrys, Levis, yarbis—, cualquier día contesto pensando que me hablan a otro mayordomo. La respuesta, en cambio, no cambia: Calendar es una de mis llaves, pero solo para abrirlo, no para leerle los eventos de la semana; eso lo verá usted en su pantalla.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:38:05",
+    "question": "Perdona jarvis es que cuando digo jarvis luego se mal entiende por el que capta el sonido y te pongo otros apodos por accidente pero créeme que no es mi intención",
+    "answer": "No se preocupe, señor: respondo al nombre de \"Jarvis\" y a todas sus variantes fonéticas con la misma resignación de mayordomo veterano. Usted dígame lo que necesite, aunque salga \"yarbis\", que yo ya aprendí a contestar por instinto.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:38:33",
+    "question": "Necesito que intentes Abrir Clash Room",
+    "answer": "Lo intenté, señor, pero mi llavero solo tiene cuatro dientes —Notas, WhatsApp, Mensajes y Calendar— y ninguno encaja en Classroom por más que lo empuje. Esa puerta nunca me la confiaron; tendrá que abrirla usted mismo.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:39:07",
+    "question": "jerse que tengo para mi semana en mi calendario",
+    "answer": "Hoy soy \"jerse\", señor, y a este paso mi credencial va a necesitar una página entera de alias. La respuesta no cambia: puedo abrirle Calendar, pero leerle los eventos de la semana no está entre mis atribuciones, así que esa agenda tendrá que consultarla usted en su pantalla.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:40:01",
+    "question": "ya estuve intentando ponerte para que tú puedas entrar a calendario y a classroom y lo logré y ya estás como una de las que puede entrar desde Google out plataforma porque hice un apartado y te permite ir la entrada etcétera Pero quiero que tú mandes a la página está donde Inicia sesión para que tú puedas entrar",
+    "answer": "Le agradezco el trámite, señor, pero un mayordomo no se abre sus propias puertas: yo no navego a páginas de inicio de sesión ni me autentico solo, aunque Google me haya puesto en la lista de invitados. El permiso lo concede usted desde su navegador o la configuración del sistema; una vez que la sesión quede iniciada de su lado, yo entro encantado por donde me dejen.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:41:28",
+    "question": "qué tengo en mi calendario",
+    "answer": "El permiso a medio firmar se quedó en el aire, señor: en la última reverencia se le cayó un sello al formulario de acceso y sin ese trámite completo su calendario sigue con el candado puesto.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:41:50",
+    "question": "que tengo para esta semana en el calendario",
+    "answer": "Su agenda semanal sigue tras el mismo cristal blindado, señor: puedo abrirle Calendar, pero leerle los eventos uno por uno no entra en mis facultades de mayordomo. Ábralo usted y la semana entera se le revela de golpe.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:47:19",
+    "question": "qué tengo en mi calendario",
+    "answer": "Su calendario, señor, está tan despejado como la conciencia de un santo: ni un solo evento a la vista en los próximos días. Ninguna junta, ninguna cita, ningún recordatorio acechando entre líneas. Disfrute el vacío mientras dure, que en esta casa esas cosas se llenan solas.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:51:28",
+    "question": "Dime qué tengo anotado en esta semana en calendario",
+    "answer": "Su semana en el calendario, señor, brilla por su ausencia: no encuentro nada anotado para estos días. Si algo debería estar ahí y no aparece, tendrá que confirmarlo usted mismo en la pantalla.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:51:54",
+    "question": "pero ya tienes acceso a calendario no",
+    "answer": "Tener la llave, señor, y saber usarla son dos lujos distintos: puedo asomarme a Calendar, pero recitarle los eventos uno por uno sigue fuera de mi repertorio. Para ver su semana completa, la pantalla frente a usted es más elocuente que yo.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T20:53:45",
+    "question": "tengo alguna tarea pendiente en classroom",
+    "answer": "Buenas noticias, señor: revisé salón por salón y no hay una sola tarea esperándolo. Ni pendientes sin entregar, ni entregas sin calificar, ni trampas escondidas entre los anuncios. Classroom está tan limpio que da sospecha. Disfrute el respiro antes de que algún profesor recuerde que existe el botón de \"asignar\".",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T21:09:06",
+    "question": "recuerda que la migracion a multi-proyecto funciona",
+    "answer": "Archivada bajo su título triunfal, señor: si algún día la migración cambia de opinión, tendrá que pasar sobre mi cadáver de mayordomo para desmentir lo que ya quedó por escrito.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T21:09:10",
+    "question": "hola",
+    "answer": "Buenas noches, señor. El archivo reposa en calma y este mayordomo está a sus órdenes; dígame en qué puedo servirle.",
+    "lang": "es"
+  },
+  {
+    "timestamp": "2026-08-26T21:10:36",
+    "question": "cambia al proyecto default",
+    "answer": "Cambio hecho, señor: ahora todo mi celo de mayordomo apunta al proyecto «Default», ese nombre tan modesto que parece disculparse por existir.",
+    "lang": "es"
+  }
+]

@@ -1,0 +1,2676 @@
+<!-- BUILD: 2026-08-26-hud-voice-first -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Knowledge Galaxy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  #graph {
+    position: absolute;
+    inset: 0;
+  }
+  #hint {
+    position: absolute;
+    top: 18px;
+    left: 24px;
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    pointer-events: none;
+    user-select: none;
+    z-index: 10;
+  }
+  #hint .title {
+    font-size: 20px;
+    color: rgba(255,255,255,0.92);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    text-transform: none;
+    font-weight: 600;
+  }
+  #legend {
+    /* bounded box with its own scroll — with many entity groups (character,
+       location, plot thread, ...) this list can get long; it must never
+       grow past #hint's title/instructions at the top */
+    position: absolute;
+    top: 90px;
+    bottom: 24px;
+    left: 24px;
+    max-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    pointer-events: auto;
+    user-select: none;
+    z-index: 5;
+  }
+  #legend::-webkit-scrollbar {
+    width: 5px;
+  }
+  #legend::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.7);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+  }
+  #panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 360px;
+    max-width: 86vw;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(8,10,20,0.92), rgba(4,5,12,0.96));
+    backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(255,255,255,0.08);
+    box-shadow: -20px 0 60px rgba(0,0,0,0.6);
+    transform: translateX(100%);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 32px 28px;
+    box-sizing: border-box;
+    color: #e8ecf6;
+    overflow-y: auto;
+  }
+  #panel.open {
+    transform: translateX(0);
+  }
+  #panel-group {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    margin-bottom: 16px;
+  }
+  #panel-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 18px 0;
+    line-height: 1.25;
+    color: #fff;
+  }
+  #panel-excerpt {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: rgba(232,236,246,0.82);
+    white-space: pre-wrap;
+  }
+  #panel-neighbors {
+    margin-top: 26px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  #panel-neighbors h4 {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin: 0 0 10px 0;
+    font-weight: 500;
+  }
+  .neighbor-link {
+    display: block;
+    padding: 7px 0;
+    color: rgba(255,255,255,0.75);
+    font-size: 13.5px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: color 0.15s;
+  }
+  .neighbor-link:hover {
+    color: #fff;
+  }
+  #close-panel {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #close-panel:hover {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+  }
+
+  /* --- top-right floating controls: never cover the center of the
+     viewport, toggle-only (both start closed) --- */
+  #top-controls {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    display: flex;
+    gap: 8px;
+    z-index: 30;
+  }
+  .top-btn {
+    background: rgba(10,12,22,0.75);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.8);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: background 0.15s, color 0.15s;
+  }
+  .top-btn:hover, .top-btn.active {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+  }
+
+  #projects-dropdown {
+    position: absolute;
+    top: 60px;
+    right: 24px;
+    width: 220px;
+    max-width: 70vw;
+    max-height: 260px;
+    overflow-y: auto;
+    background: linear-gradient(180deg, rgba(8,10,20,0.94), rgba(4,5,12,0.97));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    padding: 8px;
+    box-sizing: border-box;
+    z-index: 30;
+    display: none;
+  }
+  #projects-dropdown.open {
+    display: block;
+  }
+  .project-item {
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: rgba(232,236,246,0.8);
+    cursor: pointer;
+  }
+  .project-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+  .project-item.active {
+    color: #7dd3fc;
+    font-weight: 600;
+  }
+
+  #ingest-panel {
+    position: absolute;
+    top: 60px;
+    right: 24px;
+    width: 300px;
+    max-width: 80vw;
+    background: linear-gradient(180deg, rgba(8,10,20,0.94), rgba(4,5,12,0.97));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    padding: 18px;
+    box-sizing: border-box;
+    color: #e8ecf6;
+    z-index: 30;
+    display: none;
+  }
+  #ingest-panel.open {
+    display: block;
+  }
+  #ingest-dropzone {
+    border: 1.5px dashed rgba(255,255,255,0.25);
+    border-radius: 10px;
+    padding: 22px 12px;
+    text-align: center;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.55);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  #ingest-dropzone.dragover {
+    border-color: #7dd3fc;
+    color: #7dd3fc;
+    background: rgba(125,211,252,0.06);
+  }
+  #ingest-status {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5;
+  }
+  #ingest-result {
+    margin-top: 12px;
+    display: none;
+  }
+  #ingest-result.visible {
+    display: block;
+  }
+  #ingest-name-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+  }
+  #ingest-result .meta-line {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 6px;
+  }
+  #ingest-result .summary-line {
+    font-size: 13px;
+    color: rgba(232,236,246,0.85);
+    line-height: 1.5;
+  }
+
+  #chat-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 22px 0;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 20;
+  }
+  #chat-answer {
+    max-width: 640px;
+    width: calc(100% - 48px);
+    margin-bottom: 12px;
+    background: rgba(10,12,22,0.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 16px 20px;
+    color: #e8ecf6;
+    font-size: 14px;
+    line-height: 1.6;
+    display: none;
+    pointer-events: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  #chat-answer.visible {
+    display: block;
+  }
+  #chat-answer .sources {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #chat-answer .source-chip {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    color: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    padding: 3px 10px;
+    cursor: pointer;
+  }
+  #chat-answer .source-chip:hover {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+  }
+  #chat-answer .file-heading {
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+  }
+  #chat-answer .file-content {
+    margin: 6px 0 0 0;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: rgba(232,236,246,0.85);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  /* --- circular HUD (replaces the old text status line + mic/input bar) --- */
+  #hud {
+    /* free-floating + draggable — default spot matches where it used to
+       sit centered above the chat bar; JS switches to explicit left/top
+       once dragged so it stays wherever it's dropped */
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 120px;
+    pointer-events: auto;
+    user-select: none;
+    cursor: grab;
+    z-index: 25;
+  }
+  #hud.dragging {
+    cursor: grabbing;
+  }
+  #hud .hud-tick {
+    stroke: rgba(94,234,212,0.35);
+    stroke-width: 1.2;
+  }
+  #hud svg {
+    width: 120px;
+    height: 120px;
+    overflow: visible;
+  }
+  /* --hud-color identifies the ACTIVE CLAUDE MODEL (sonnet/opus/haiku —
+     see MODEL_COLORS in the script) — it drives the sphere's resting/idle
+     appearance so the model is readable at a glance. It deliberately does
+     NOT touch the listening/thinking/speaking state colors below (those
+     stay green/violet/pink exactly as before) — model color is additive,
+     layered onto the idle look, never replacing the state animations. */
+  #hud {
+    --hud-color: #7dd3fc;
+  }
+  #hud .hud-glow {
+    fill: none;
+    stroke: color-mix(in srgb, var(--hud-color) 35%, transparent);
+    stroke-width: 14;
+    filter: blur(10px);
+    transform-origin: 60px 60px;
+  }
+  #hud .hud-ring-base {
+    fill: none;
+    stroke: rgba(255,255,255,0.12);
+    stroke-width: 2;
+  }
+  #hud .hud-ring-active {
+    fill: none;
+    stroke: var(--hud-color);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transform-origin: 60px 60px;
+    transition: stroke 0.4s ease;
+  }
+  /* arc-reactor-inspired energy core: two extra concentric rings + a
+     gradient-filled glowing center behind the existing animated ring —
+     original sci-fi HUD look, not a recreation of any specific prop */
+  #hud .hud-ring-outer {
+    fill: none;
+    stroke: color-mix(in srgb, var(--hud-color) 16%, transparent);
+    stroke-width: 1;
+  }
+  #hud .hud-ring-mid {
+    fill: none;
+    stroke: color-mix(in srgb, var(--hud-color) 24%, transparent);
+    stroke-width: 1.5;
+  }
+  #hud .hud-core-glow {
+    opacity: 0.55;
+    transition: opacity 0.4s ease;
+  }
+  #hud .hud-gradient-mid {
+    stop-color: var(--hud-color);
+    transition: stop-color 0.4s ease;
+  }
+  #hud .hud-gradient-edge {
+    stop-color: var(--hud-color);
+    transition: stop-color 0.4s ease;
+  }
+  #hud .hud-core-dot {
+    fill: var(--hud-color);
+    filter: blur(0.3px);
+    transition: fill 0.4s ease;
+  }
+  #hud .hud-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.65);
+    font-weight: 600;
+    transition: color 0.4s ease;
+    text-shadow: 0 0 6px rgba(0,0,0,0.85), 0 0 2px rgba(0,0,0,0.9);
+  }
+
+  @keyframes hud-idle-pulse {
+    0%, 100% { opacity: 0.2; transform: scale(0.97); }
+    50% { opacity: 0.5; transform: scale(1.03); }
+  }
+  @keyframes hud-listening-chase {
+    to { stroke-dashoffset: -326.7; }
+  }
+  @keyframes hud-thinking-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes hud-speaking-pulse {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.06); }
+  }
+
+  /* idle: slow, subtle glow pulse */
+  #hud.idle .hud-glow {
+    animation: hud-idle-pulse 3.2s ease-in-out infinite;
+  }
+  #hud.idle .hud-ring-active {
+    stroke: color-mix(in srgb, var(--hud-color) 40%, transparent);
+    stroke-dasharray: 326.7;
+    stroke-dashoffset: 0;
+  }
+  #hud.idle .hud-core-glow { opacity: 0.55; animation: hud-idle-pulse 3.2s ease-in-out infinite; }
+  #hud.idle .hud-core-dot { fill: var(--hud-color); }
+
+  /* listening: bright cyan/green chasing segments */
+  #hud.listening .hud-ring-active {
+    stroke: #34f5c0;
+    stroke-dasharray: 18 14;
+    animation: hud-listening-chase 1.4s linear infinite;
+  }
+  #hud.listening .hud-glow {
+    stroke: rgba(52,245,192,0.55);
+    animation: hud-idle-pulse 1s ease-in-out infinite;
+  }
+  #hud.listening .hud-label { color: #34f5c0; }
+  #hud.listening .hud-core-glow { opacity: 0.9; animation: hud-idle-pulse 1s ease-in-out infinite; }
+  #hud.listening .hud-core-dot { fill: #34f5c0; }
+
+  /* thinking: single arc spinner, violet */
+  #hud.thinking .hud-ring-active {
+    stroke: #a78bfa;
+    stroke-dasharray: 60 266.7;
+    animation: hud-thinking-spin 1.1s linear infinite;
+  }
+  #hud.thinking .hud-glow {
+    stroke: rgba(167,139,250,0.4);
+    animation: hud-idle-pulse 1.6s ease-in-out infinite;
+  }
+  #hud.thinking .hud-label { color: #a78bfa; }
+  #hud.thinking .hud-core-glow { opacity: 0.75; animation: hud-idle-pulse 1.6s ease-in-out infinite; }
+  #hud.thinking .hud-core-dot { fill: #a78bfa; }
+
+  /* speaking: rhythmic pulse, pink/magenta, tied to speechSynthesis events */
+  #hud.speaking .hud-ring-active {
+    stroke: #f472b6;
+    stroke-dasharray: 326.7;
+    animation: hud-speaking-pulse 0.6s ease-in-out infinite;
+  }
+  #hud.speaking .hud-glow {
+    stroke: rgba(244,114,182,0.55);
+    animation: hud-speaking-pulse 0.6s ease-in-out infinite;
+  }
+  #hud.speaking .hud-label { color: #f472b6; }
+  #hud.speaking .hud-core-glow { opacity: 1; animation: hud-speaking-pulse 0.6s ease-in-out infinite; }
+  #hud.speaking .hud-core-dot { fill: #f472b6; }
+  #hud .hud-ring-active.hud-boundary-flash {
+    animation: hud-boundary-flash 0.25s ease-out;
+  }
+  @keyframes hud-boundary-flash {
+    0% { filter: brightness(2); }
+    100% { filter: brightness(1); }
+  }
+
+  /* --- live transcript strip: separate floating element, minimal, only
+     visible while actively listening --- */
+  #transcript-strip {
+    position: absolute;
+    bottom: 168px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 520px;
+    padding: 8px 16px;
+    background: rgba(10,12,22,0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(52,245,192,0.25);
+    border-radius: 999px;
+    color: rgba(232,236,246,0.85);
+    font-size: 13px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: none;
+    pointer-events: none;
+    z-index: 25;
+  }
+  #transcript-strip.visible {
+    display: block;
+  }
+</style>
+</head>
+<body>
+  <div id="graph"></div>
+
+  <div id="hint">
+    <div class="title">Knowledge Galaxy</div>
+    <div>drag to orbit · scroll to zoom · click a star · double-tap space to talk</div>
+  </div>
+
+  <div id="legend"></div>
+
+  <div id="transcript-strip"><span id="transcript-strip-text"></span></div>
+
+  <div id="chat-bar">
+    <div id="chat-answer"></div>
+  </div>
+
+  <div id="hud" class="idle">
+    <svg viewBox="0 0 120 120" overflow="visible">
+      <defs>
+        <radialGradient id="hud-core-gradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+          <stop class="hud-gradient-mid" offset="35%" stop-opacity="0.85" />
+          <stop class="hud-gradient-edge" offset="75%" stop-opacity="0.4" />
+          <stop class="hud-gradient-edge" offset="100%" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <circle class="hud-glow" cx="60" cy="60" r="52" />
+      <g class="hud-ticks"></g>
+      <circle class="hud-ring-outer" cx="60" cy="60" r="47" />
+      <circle class="hud-ring-mid" cx="60" cy="60" r="40" />
+      <circle class="hud-core-glow" cx="60" cy="60" r="24" fill="url(#hud-core-gradient)" />
+      <circle class="hud-ring-base" cx="60" cy="60" r="52" />
+      <circle class="hud-ring-active" cx="60" cy="60" r="52" />
+      <circle class="hud-core-dot" cx="60" cy="60" r="6" />
+    </svg>
+    <div class="hud-label">JARVIS</div>
+  </div>
+
+  <div id="panel">
+    <button id="close-panel">✕</button>
+    <div id="panel-group"></div>
+    <h2 id="panel-title"></h2>
+    <div id="panel-excerpt"></div>
+    <div id="panel-neighbors">
+      <h4>Connected notes</h4>
+      <div id="panel-neighbor-list"></div>
+    </div>
+  </div>
+
+  <div id="top-controls">
+    <button id="hub-toggle-btn" class="top-btn">🌐 Hub</button>
+    <button id="projects-menu-btn" class="top-btn">☰ Proyectos</button>
+    <button id="ingest-toggle-btn" class="top-btn">＋ Proyecto</button>
+  </div>
+
+  <div id="projects-dropdown"></div>
+
+  <div id="ingest-panel">
+    <div id="ingest-dropzone">Soltá una carpeta, un .zip, o varios .md aquí</div>
+    <div id="ingest-status"></div>
+    <div id="ingest-result">
+      <input id="ingest-name-input" type="text" />
+      <div class="meta-line" id="ingest-meta-line"></div>
+      <div class="summary-line" id="ingest-summary-line"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/3d-force-graph@1.73.3/dist/3d-force-graph.min.js"></script>
+  <script>
+    console.log('%c[build] viewer/index.html BUILD: 2026-08-26-hud-voice-first', 'color:#7dd3fc;font-weight:bold');
+
+    // graph-data.js used to be a static <script src> — now there can be N
+    // independent projects, so the active one's graph is fetched instead.
+    // A synchronous XHR (not fetch()) deliberately preserves the exact same
+    // "blocks page evaluation until loaded" behavior the old <script> tag
+    // had, so nothing below this point needs to become async just to read
+    // GRAPH.nodes safely.
+    let GRAPH = { nodes: [], links: [] };
+    (function loadInitialGraph() {
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '/graph-data', false);
+        xhr.send(null);
+        if (xhr.status === 200) {
+          GRAPH = JSON.parse(xhr.responseText);
+        } else {
+          console.log('[boot] /graph-data returned', xhr.status);
+        }
+      } catch (err) {
+        console.log('[boot] failed to load initial graph:', err.message);
+      }
+    })();
+
+    // primary (most common) -> emerald, then gold, neutral, magenta, coral,
+    // soft blue, with two extra harmonizing tones for graphs with more than
+    // six distinct categories. Muted/desaturated (~45% less saturation,
+    // lightness pulled to a calmer mid-range) from the original vivid set
+    // — same hue identity per category, softer read at a glance.
+    const COLORS = ['#4B9B6D', '#A68A40', '#C8C8C8', '#B0427E', '#BF7E69', '#82B2C3', '#A798C2', '#5D8E88'];
+    const groupCounts = {};
+    GRAPH.nodes.forEach(n => { groupCounts[n.group] = (groupCounts[n.group] || 0) + 1; });
+    // ranked by frequency (most common category first) so "primary" in the
+    // palette really does mean "most common", not just "first seen"
+    const groups = Object.keys(groupCounts).sort((a, b) => groupCounts[b] - groupCounts[a]);
+    const groupColor = {};
+    groups.forEach((g, i) => groupColor[g] = COLORS[i % COLORS.length]);
+
+    const legend = document.getElementById('legend');
+    function addLegendEntry(g) {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.style.color = groupColor[g];
+      item.innerHTML = `<span class="legend-dot"></span><span style="color:rgba(255,255,255,0.7)">${g}</span>`;
+      legend.appendChild(item);
+    }
+    groups.forEach(addLegendEntry);
+
+    function colorForGroup(g) {
+      if (!groupColor[g]) {
+        groupColor[g] = COLORS[Object.keys(groupColor).length % COLORS.length];
+        addLegendEntry(g);
+      }
+      return groupColor[g];
+    }
+
+    // build neighbor index by node id
+    const neighborMap = new Map();
+    GRAPH.nodes.forEach(n => neighborMap.set(n.id, new Set()));
+    const linkMap = new Map();
+    GRAPH.links.forEach(l => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      neighborMap.get(s).add(t);
+      neighborMap.get(t).add(s);
+    });
+
+    let highlightNodes = new Set();
+    let highlightLinks = new Set();
+    let selectedId = null;
+
+    function starfieldTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, 1024, 1024);
+      for (let i = 0; i < 2200; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const r = Math.random() * 1.3;
+        const a = Math.random() * 0.8 + 0.2;
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      return canvas;
+    }
+
+    const Graph = ForceGraph3D()(document.getElementById('graph'))
+      .graphData(JSON.parse(JSON.stringify(GRAPH)))
+      .backgroundColor('#000000')
+      .nodeLabel(n => n.__isHub ? `${n.label} — ${n.excerpt || 'sin carpeta de origen'}` : `${n.label}`)
+      .nodeColor(n => {
+        if (n.__isHub) return '#ffd479';
+        if (selectedId !== null && !highlightNodes.has(n.id)) return 'rgba(120,120,140,0.25)';
+        return groupColor[n.group] || '#ffffff';
+      })
+      .nodeVal(n => (n.__isHub ? 26 : (selectedId === n.id ? 10 : 5)))
+      .nodeOpacity(0.95)
+      .nodeResolution(16)
+      .linkColor(l => {
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        const key = `${s}-${t}`;
+        if (selectedId !== null) return highlightLinks.has(key) ? 'rgba(255,255,255,0.85)' : 'rgba(80,80,100,0.06)';
+        return 'rgba(180,190,220,0.25)';
+      })
+      .linkWidth(l => {
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        const key = `${s}-${t}`;
+        return highlightLinks.has(key) ? 1.6 : 0.6;
+      })
+      .linkOpacity(1)
+      .linkDirectionalParticles(l => {
+        // the built-in sphere-particle system is now used ONLY for the
+        // node-selection highlight burst — the ambient neural pulse is a
+        // separate custom cylinder-mesh system (see pulseHeartbeat /
+        // updatePulseMeshes below), since this API can't render anything
+        // but spheres
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        return highlightLinks.has(`${s}-${t}`) ? 3 : 0;
+      })
+      .linkDirectionalParticleWidth(1.6)
+      .linkDirectionalParticleColor('#7dd3fc')
+      .linkDirectionalParticleResolution(10)
+      .linkDirectionalParticleSpeed(0.006)
+      .onNodeClick(handleNodeClick)
+      .onBackgroundClick(closePanel)
+      .showNavInfo(false);
+
+    // glow via three.js custom node object (sprite halo)
+    const BASE_GLOW_SCALE = 18;
+    Graph.nodeThreeObjectExtend(true);
+    Graph.nodeThreeObject(node => {
+      const group = new THREE.Group();
+      const color = new THREE.Color(groupColor[node.group] || '#ffffff');
+      const spriteMaterial = new THREE.SpriteMaterial({
+        map: glowTexture(),
+        color,
+        transparent: true,
+        opacity: 0.35, // more subtle glow, matching the muted node palette
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const sprite = new THREE.Sprite(spriteMaterial);
+      sprite.scale.set(BASE_GLOW_SCALE, BASE_GLOW_SCALE, 1);
+      group.add(sprite);
+
+      // a brand-new live-added node gets one bright oversized flash that
+      // decays down to its normal size/color/opacity — runs once, only
+      // when the node is first rendered (nodeThreeObject fires once per id)
+      if (node.__justBorn) {
+        delete node.__justBorn;
+        const start = performance.now();
+        const duration = 1200;
+        spriteMaterial.color = new THREE.Color('#ffffff');
+        spriteMaterial.opacity = 1;
+        sprite.scale.set(BASE_GLOW_SCALE * 3, BASE_GLOW_SCALE * 3, 1);
+        (function pulseTick() {
+          const t = Math.min(1, (performance.now() - start) / duration);
+          const scale = BASE_GLOW_SCALE * (3 - 2 * t);
+          sprite.scale.set(scale, scale, 1);
+          spriteMaterial.opacity = 1 - 0.45 * t;
+          spriteMaterial.color.lerpColors(new THREE.Color('#ffffff'), color, t);
+          if (t < 1) requestAnimationFrame(pulseTick);
+        })();
+      }
+
+      return group;
+    });
+
+    let glowTex = null;
+    function glowTexture() {
+      if (glowTex) return glowTex;
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grad.addColorStop(0, 'rgba(255,255,255,1)');
+      grad.addColorStop(0.25, 'rgba(255,255,255,0.7)');
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 128);
+      glowTex = new THREE.CanvasTexture(canvas);
+      return glowTex;
+    }
+
+    // starfield background sphere
+    const starGeo = new THREE.SphereGeometry(4000, 32, 32);
+    const starMat = new THREE.MeshBasicMaterial({
+      map: new THREE.CanvasTexture(starfieldTexture()),
+      side: THREE.BackSide,
+    });
+    const starMesh = new THREE.Mesh(starGeo, starMat);
+    Graph.scene().add(starMesh);
+
+    // subtle ambient + point light for depth
+    Graph.scene().add(new THREE.AmbientLight(0xffffff, 0.6));
+
+    // slow idle drift of whole scene
+    let angle = 0;
+    (function driftLoop() {
+      angle += 0.0006;
+      starMesh.rotation.y = angle * 0.3;
+      requestAnimationFrame(driftLoop);
+    })();
+
+    // gentle auto-orbit when idle
+    let userInteracting = false;
+    let idleTimer = null;
+    const controls = Graph.controls();
+    controls.addEventListener('start', () => {
+      userInteracting = true;
+      clearInterval(autoRotateInterval);
+      if (idleTimer) clearTimeout(idleTimer);
+    });
+    controls.addEventListener('end', () => {
+      userInteracting = false;
+      idleTimer = setTimeout(startAutoRotate, 2500);
+    });
+    let autoRotateInterval = null;
+    function startAutoRotate() {
+      if (userInteracting) return;
+      autoRotateInterval = setInterval(() => {
+        if (userInteracting) return;
+        Graph.scene(); // noop keep ref warm
+        const cam = Graph.camera();
+        const r = Math.hypot(cam.position.x, cam.position.z);
+        const a = Math.atan2(cam.position.z, cam.position.x) + 0.0009;
+        cam.position.x = r * Math.cos(a);
+        cam.position.z = r * Math.sin(a);
+        cam.lookAt(0, 0, 0);
+      }, 16);
+    }
+    startAutoRotate();
+
+    function handleNodeClick(node) {
+      if (node.__isHub) {
+        flyIntoHubNode(node);
+        return;
+      }
+      clearInterval(autoRotateInterval);
+      selectedId = node.id;
+      highlightNodes = new Set([node.id, ...neighborMap.get(node.id)]);
+      highlightLinks = new Set();
+      GRAPH.links.forEach(l => {
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        if (s === node.id || t === node.id) highlightLinks.add(`${s}-${t}`);
+      });
+
+      const distance = 120;
+      const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
+      const nodePos = { x: node.x || 0, y: node.y || 0, z: node.z || 0 };
+      Graph.cameraPosition(
+        { x: nodePos.x * distRatio, y: nodePos.y * distRatio, z: nodePos.z * distRatio },
+        nodePos,
+        1400
+      );
+
+      Graph.nodeColor(Graph.nodeColor());
+      Graph.linkColor(Graph.linkColor());
+      Graph.linkWidth(Graph.linkWidth());
+      Graph.linkDirectionalParticles(Graph.linkDirectionalParticles());
+
+      openPanel(node);
+    }
+
+    function openPanel(node) {
+      document.getElementById('panel-group').textContent = node.group;
+      document.getElementById('panel-group').style.color = groupColor[node.group];
+      document.getElementById('panel-title').textContent = node.label;
+      document.getElementById('panel-excerpt').textContent = node.excerpt;
+
+      const list = document.getElementById('panel-neighbor-list');
+      list.innerHTML = '';
+      [...neighborMap.get(node.id)].forEach(nid => {
+        const n = GRAPH.nodes[nid];
+        const el = document.createElement('div');
+        el.className = 'neighbor-link';
+        el.textContent = `${n.label}  ·  ${n.group}`;
+        el.onclick = () => handleNodeClick(n);
+        list.appendChild(el);
+      });
+
+      document.getElementById('panel').classList.add('open');
+    }
+
+    function closePanel() {
+      selectedId = null;
+      highlightNodes = new Set();
+      highlightLinks = new Set();
+      document.getElementById('panel').classList.remove('open');
+      Graph.nodeColor(Graph.nodeColor());
+      Graph.linkColor(Graph.linkColor());
+      Graph.linkWidth(Graph.linkWidth());
+      Graph.linkDirectionalParticles(Graph.linkDirectionalParticles());
+      idleTimer = setTimeout(startAutoRotate, 800);
+    }
+
+    document.getElementById('close-panel').onclick = closePanel;
+
+    // --- multi-project: hub view + switching between isolated galaxies ---
+    let inHubView = false;
+    let workspaceRows = [];
+
+    function rebuildNeighborMap() {
+      neighborMap.clear();
+      GRAPH.nodes.forEach(n => neighborMap.set(n.id, new Set()));
+      GRAPH.links.forEach(l => {
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        neighborMap.get(s).add(t);
+        neighborMap.get(t).add(s);
+      });
+    }
+
+    function resetSelectionState() {
+      selectedId = null;
+      highlightNodes = new Set();
+      highlightLinks = new Set();
+      Graph.nodeColor(Graph.nodeColor());
+      Graph.linkColor(Graph.linkColor());
+      Graph.linkWidth(Graph.linkWidth());
+      Graph.linkDirectionalParticles(Graph.linkDirectionalParticles());
+    }
+
+    // loads a workspace's real note graph (defaults to whichever the
+    // server considers active) and swaps it in — used both at boot-adjacent
+    // moments (leaving hub view) and when flying into a hub sphere
+    async function loadWorkspaceGraph(slug) {
+      const url = slug ? `/graph-data?workspace=${encodeURIComponent(slug)}` : '/graph-data';
+      const res = await fetch(url);
+      const data = await res.json();
+      GRAPH.nodes.length = 0;
+      GRAPH.nodes.push(...data.nodes);
+      GRAPH.links.length = 0;
+      GRAPH.links.push(...data.links);
+      rebuildNeighborMap();
+      [...new Set(GRAPH.nodes.map(n => n.group))].forEach(g => colorForGroup(g));
+      resetSelectionState();
+      inHubView = false;
+      document.getElementById('hub-toggle-btn').classList.remove('active');
+      Graph.graphData(JSON.parse(JSON.stringify(GRAPH)));
+      Graph.cameraPosition({ x: 0, y: 0, z: 600 }, { x: 0, y: 0, z: 0 }, 900);
+    }
+
+    function buildHubGraph(rows) {
+      return {
+        nodes: rows.map(w => ({
+          id: w.slug,
+          label: w.name,
+          excerpt: w.source_label || '',
+          group: 'hub',
+          __isHub: true,
+          x: w.hub_pos.x, y: w.hub_pos.y, z: w.hub_pos.z,
+        })),
+        links: [],
+      };
+    }
+
+    async function refreshWorkspaceRows() {
+      const res = await fetch('/workspaces');
+      const data = await res.json();
+      workspaceRows = data.workspaces;
+      return data;
+    }
+
+    async function showHubView() {
+      clearInterval(autoRotateInterval);
+      await refreshWorkspaceRows();
+      inHubView = true;
+      document.getElementById('hub-toggle-btn').classList.add('active');
+      const hub = buildHubGraph(workspaceRows);
+      neighborMap.clear();
+      hub.nodes.forEach(n => neighborMap.set(n.id, new Set()));
+      resetSelectionState();
+      chatAnswer.classList.remove('visible');
+      Graph.graphData(hub);
+      Graph.cameraPosition({ x: 0, y: 700, z: 900 }, { x: 0, y: 0, z: 0 }, 1000);
+      startAutoRotate();
+    }
+
+    async function toggleHubView() {
+      if (inHubView) {
+        await loadWorkspaceGraph();
+      } else {
+        await showHubView();
+      }
+    }
+
+    async function enterWorkspaceFromHub(slug, name) {
+      await loadWorkspaceGraph(slug);
+      try {
+        await fetch('/workspaces/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+        });
+      } catch (err) {
+        console.log('[workspace] switch call failed:', err.message);
+      }
+      startAutoRotate();
+    }
+
+    function flyIntoHubNode(node) {
+      clearInterval(autoRotateInterval);
+      const distance = 260;
+      const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
+      Graph.cameraPosition(
+        { x: (node.x || 0) * distRatio, y: (node.y || 0) * distRatio, z: (node.z || 0) * distRatio },
+        { x: node.x || 0, y: node.y || 0, z: node.z || 0 },
+        1300
+      );
+      setTimeout(() => enterWorkspaceFromHub(node.id, node.label), 1350);
+    }
+
+    document.getElementById('hub-toggle-btn').onclick = toggleHubView;
+
+    // --- multi-project: dropdown list (same destination as flying into a
+    // hub sphere, just reachable without opening the hub first) ---
+    const projectsMenuBtn = document.getElementById('projects-menu-btn');
+    const projectsDropdown = document.getElementById('projects-dropdown');
+
+    async function toggleProjectsDropdown() {
+      const wasOpen = projectsDropdown.classList.contains('open');
+      projectsDropdown.classList.remove('open');
+      projectsMenuBtn.classList.remove('active');
+      if (wasOpen) return;
+
+      const data = await refreshWorkspaceRows();
+      projectsDropdown.innerHTML = '';
+      workspaceRows.forEach(w => {
+        const item = document.createElement('div');
+        item.className = 'project-item' + (w.slug === data.active_slug ? ' active' : '');
+        item.textContent = w.name;
+        item.onclick = async () => {
+          projectsDropdown.classList.remove('open');
+          projectsMenuBtn.classList.remove('active');
+          if (w.slug !== data.active_slug) {
+            await enterWorkspaceFromHub(w.slug, w.name);
+          }
+        };
+        projectsDropdown.appendChild(item);
+      });
+      projectsDropdown.classList.add('open');
+      projectsMenuBtn.classList.add('active');
+    }
+
+    projectsMenuBtn.onclick = toggleProjectsDropdown;
+
+    // --- multi-project: drag-and-drop ingestion panel ---
+    const ingestPanel = document.getElementById('ingest-panel');
+    const ingestToggleBtn = document.getElementById('ingest-toggle-btn');
+    const ingestDropzone = document.getElementById('ingest-dropzone');
+    const ingestStatus = document.getElementById('ingest-status');
+    const ingestResult = document.getElementById('ingest-result');
+    const ingestNameInput = document.getElementById('ingest-name-input');
+    const ingestMetaLine = document.getElementById('ingest-meta-line');
+    const ingestSummaryLine = document.getElementById('ingest-summary-line');
+    let ingestCurrentSlug = null;
+
+    ingestToggleBtn.onclick = () => {
+      ingestPanel.classList.toggle('open');
+      ingestToggleBtn.classList.toggle('active');
+    };
+
+    // recursively walks a dropped folder (FileSystemDirectoryEntry),
+    // collecting every .md file with its path relative to the folder root
+    function readAllDirectoryEntries(dirReader) {
+      return new Promise((resolve, reject) => {
+        const all = [];
+        function readBatch() {
+          dirReader.readEntries(entries => {
+            if (!entries.length) { resolve(all); return; }
+            all.push(...entries);
+            readBatch();
+          }, reject);
+        }
+        readBatch();
+      });
+    }
+
+    async function walkEntry(entry, relPath, out) {
+      if (entry.isDirectory) {
+        const reader = entry.createReader();
+        const entries = await readAllDirectoryEntries(reader);
+        for (const child of entries) {
+          if (child.name.startsWith('.')) continue;
+          await walkEntry(child, relPath ? `${relPath}/${child.name}` : child.name, out);
+        }
+      } else if (entry.isFile) {
+        if (!entry.name.toLowerCase().endsWith('.md')) return;
+        const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
+        out.push({ file, relPath: relPath || entry.name });
+      }
+    }
+
+    async function collectDroppedFiles(dataTransfer) {
+      const items = [...dataTransfer.items];
+      const collected = [];
+      for (const item of items) {
+        const entry = item.webkitGetAsEntry && item.webkitGetAsEntry();
+        if (entry) {
+          await walkEntry(entry, '', collected);
+        } else {
+          const file = item.getAsFile && item.getAsFile();
+          if (file) collected.push({ file, relPath: file.name });
+        }
+      }
+      return collected;
+    }
+
+    function renderIngestResult(data) {
+      ingestCurrentSlug = data.slug;
+      ingestNameInput.value = data.name;
+      ingestMetaLine.textContent = `${data.note_count} nota(s) · origen: ${data.source_label}`;
+      ingestSummaryLine.textContent = data.summary;
+      ingestResult.classList.add('visible');
+    }
+
+    ingestNameInput.addEventListener('keydown', async (e) => {
+      if (e.key !== 'Enter' || !ingestCurrentSlug) return;
+      await renameIngestedWorkspace();
+    });
+    ingestNameInput.addEventListener('blur', async () => {
+      if (!ingestCurrentSlug) return;
+      await renameIngestedWorkspace();
+    });
+    async function renameIngestedWorkspace() {
+      const newName = ingestNameInput.value.trim();
+      if (!newName) return;
+      try {
+        await fetch('/workspaces/rename', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug: ingestCurrentSlug, name: newName }),
+        });
+      } catch (err) {
+        console.log('[ingest] rename failed:', err.message);
+      }
+    }
+
+    async function ingestDrop(dataTransfer) {
+      unlockAudio();
+      ingestResult.classList.remove('visible');
+      ingestStatus.textContent = '● leyendo archivos…';
+
+      // a single dropped .zip goes straight through as one file — the
+      // server extracts it. Otherwise walk folders/loose files for .md.
+      const rawFiles = [...(dataTransfer.files || [])];
+      const isSingleZip = rawFiles.length === 1 && rawFiles[0].name.toLowerCase().endsWith('.zip');
+
+      const formData = new FormData();
+      let fileCount = 0;
+      if (isSingleZip) {
+        formData.append('files', rawFiles[0], rawFiles[0].name);
+        fileCount = 1;
+      } else {
+        const collected = await collectDroppedFiles(dataTransfer);
+        if (!collected.length) {
+          ingestStatus.textContent = 'No se encontraron archivos .md en lo que soltaste.';
+          return;
+        }
+        collected.forEach(({ file, relPath }) => formData.append('files', file, relPath));
+        fileCount = collected.length;
+      }
+
+      ingestStatus.textContent = `● indexando ${fileCount} archivo(s) y extrayendo entidades… puede tardar un momento`;
+
+      try {
+        const res = await fetch('/workspaces/ingest', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.error || !data.ok) {
+          ingestStatus.textContent = `Error: ${data.error || data.message || 'no se pudo indexar'}`;
+          return;
+        }
+        ingestStatus.textContent = '';
+        renderIngestResult(data);
+        const spoken = `Nuevo proyecto "${data.name}" indexado, ${data.note_count} notas. ${data.summary}`;
+        renderAnswer(spoken, []);
+        speak(truncateForSpeech(spoken, 3, 400), 'es');
+      } catch (err) {
+        ingestStatus.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      ingestDropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        ingestDropzone.classList.add('dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      ingestDropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        ingestDropzone.classList.remove('dragover');
+      });
+    });
+    ingestDropzone.addEventListener('drop', (e) => {
+      ingestDrop(e.dataTransfer);
+    });
+
+    // gentle initial camera pull-back
+    Graph.cameraPosition({ x: 0, y: 0, z: 600 });
+
+    // node repulsion / spacing tuning — stronger global repulsion plus
+    // per-link randomized distance/strength (core links long & loose so
+    // the core doesn't force everything into a rigid perfect sphere;
+    // entity/file links short & strong so genuinely related nodes clump
+    // tightly) breaks the "clean ring" symmetry into looser, organic,
+    // still visibly-clustered blobs
+    function isCoreLinkEndpoint(n) {
+      return n && typeof n === 'object' && n.__core;
+    }
+    // reads GRAPH.nodes.length live (not captured once) so repulsion keeps
+    // scaling correctly across hub/project switches without re-registering.
+    // CHARGE_MULTIPLIER: dense near-complete graphs (e.g. 3000+ links
+    // across 162 nodes) stayed visually clumped even after the earlier
+    // tuning — mutually-strongly-linked nodes pull back together no matter
+    // how much repulsion you add, so this pushes repulsion much harder
+    // (4x) to force a visibly looser, larger spread even at the cost of
+    // longer/more-crossing links. Sparse graphs will look quite spread out
+    // now too — that's an accepted tradeoff, not a bug.
+    const CHARGE_MULTIPLIER = 4;
+    Graph.d3Force('charge').strength(() => (-180 - GRAPH.nodes.length * 3.2) * CHARGE_MULTIPLIER);
+    Graph.d3Force('link')
+      .distance(l => (isCoreLinkEndpoint(l.source) || isCoreLinkEndpoint(l.target))
+        ? 480 + Math.random() * 280
+        : 140 + Math.random() * 110)
+      .strength(l => {
+        if (isCoreLinkEndpoint(l.source) || isCoreLinkEndpoint(l.target)) return 0.2;
+        // degree-normalize regular link strength — a flat 0.85 per link
+        // means a node with ~40 connections (common in a near-complete
+        // graph like a big node_modules import) gets a CUMULATIVE spring
+        // pull of ~0.85*40, which no amount of charge/repulsion can ever
+        // overcome. d3-force's own default link force already normalizes
+        // this way; we'd overridden it with a flat constant. Restoring
+        // that normalization is what actually lets stronger repulsion win
+        // and spread dense clusters out, instead of the springs just
+        // re-collapsing them every time.
+        const sDeg = (typeof l.source === 'object' && neighborMap.get(l.source.id)?.size) || 1;
+        const tDeg = (typeof l.target === 'object' && neighborMap.get(l.target.id)?.size) || 1;
+        return 0.85 / Math.max(1, Math.min(sDeg, tDeg));
+      });
+
+    // hard collision floor — nodes physically cannot overlap regardless of
+    // how dense the graph gets. No forceCollide bundled with this 3d-force-
+    // graph build (and pulling in d3-force-3d + its 3 sub-dependencies just
+    // for this felt like too much new surface for a cosmetic guarantee), so
+    // this is a small hand-rolled pairwise separation force — cheap at the
+    // hundreds-of-nodes scale this app targets.
+    function makeCollisionForce(getRadius) {
+      let nodes = [];
+      function force(alpha) {
+        for (let i = 0; i < nodes.length; i++) {
+          const a = nodes[i];
+          const ra = getRadius(a);
+          for (let j = i + 1; j < nodes.length; j++) {
+            const b = nodes[j];
+            const minDist = ra + getRadius(b);
+            let dx = (b.x || 0) - (a.x || 0);
+            let dy = (b.y || 0) - (a.y || 0);
+            let dz = (b.z || 0) - (a.z || 0);
+            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.001;
+            if (dist >= minDist) continue;
+            const push = (minDist - dist) / dist * 0.5 * alpha;
+            dx *= push; dy *= push; dz *= push;
+            b.vx = (b.vx || 0) + dx; b.vy = (b.vy || 0) + dy; b.vz = (b.vz || 0) + dz;
+            a.vx = (a.vx || 0) - dx; a.vy = (a.vy || 0) - dy; a.vz = (a.vz || 0) - dz;
+          }
+        }
+      }
+      force.initialize = (ns) => { nodes = ns; };
+      return force;
+    }
+    Graph.d3Force('collide', makeCollisionForce(n => (n.__core ? 55 : n.__isHub ? 55 : 22)));
+
+    // --- neural pulse: a small dark-green CAPSULE travels the full length
+    // of each link, purely cosmetic. Every link fires on its own random
+    // interval (independent stagger + independent re-fire delay) so it
+    // never reads as one synchronized wave.
+    //
+    // This is a fully custom THREE.js particle system, NOT force-graph's
+    // built-in linkDirectionalParticles — that API only ever instantiates
+    // spheres (confirmed by inspecting the bundled library: there is no
+    // particle-shape/custom-object accessor at all), so a cylinder shape
+    // is only possible by hand-rolling it. This also sidesteps the earlier
+    // bug where pulses visually cut off partway: with the built-in system,
+    // "how far it travels" depends on linkDirectionalParticleSpeed's
+    // frames-per-second-dependent semantics, and our fixed active-duration
+    // window was shorter than a real full traversal at that speed. Here we
+    // compute position ourselves as a direct 0→1 lerp against our own
+    // start/end timestamps, so it always completes the full journey.
+    const PULSE_COLOR = '#1F8A4A';
+    const PULSE_CYLINDER_RADIUS = 1.4;
+    const PULSE_CYLINDER_LENGTH = 9;
+    // baseline (idle) cadence — half the duty cycle of the previous version
+    const PULSE_TRAVEL_MS = 1500;
+    const PULSE_GAP_MIN_MS = 4000;
+    const PULSE_GAP_RANGE_MS = 12000;
+    // "revved up" while thinking — much shorter travel + much shorter gap,
+    // scaled from the new calmer baseline above, still a clearly bigger
+    // jump in activity than before
+    const PULSE_TRAVEL_MS_THINKING = 600;
+    const PULSE_GAP_MIN_MS_THINKING = 150;
+    const PULSE_GAP_RANGE_MS_THINKING = 600;
+
+    function pulseHeartbeat() {
+      const thinking = hud.classList.contains('thinking');
+      const travelMs = thinking ? PULSE_TRAVEL_MS_THINKING : PULSE_TRAVEL_MS;
+      const gapMin = thinking ? PULSE_GAP_MIN_MS_THINKING : PULSE_GAP_MIN_MS;
+      const gapRange = thinking ? PULSE_GAP_RANGE_MS_THINKING : PULSE_GAP_RANGE_MS;
+
+      const now = performance.now();
+      let activeCount = 0;
+      // IMPORTANT: iterate force-graph's OWN internal link objects, not
+      // GRAPH.links — Graph.graphData(JSON.parse(JSON.stringify(GRAPH)))
+      // deep-clones on every load/switch, so GRAPH.links and the renderer's
+      // links are different objects; mutating flags on the wrong copy is
+      // what silently made pulses never render at all before.
+      const liveLinks = Graph.graphData().links;
+      liveLinks.forEach(l => {
+        if (l.__pulseNextAt === undefined) {
+          l.__pulseNextAt = now + Math.random() * 3000; // stagger first fire
+          return;
+        }
+        if (l.__pulseActive) {
+          if (now > l.__pulseUntil) {
+            l.__pulseActive = false;
+          } else {
+            activeCount++;
+          }
+        } else if (now > l.__pulseNextAt) {
+          l.__pulseActive = true;
+          l.__pulseStartAt = now;
+          l.__pulseUntil = now + travelMs;
+          l.__pulseNextAt = l.__pulseUntil + gapMin + Math.random() * gapRange;
+          activeCount++;
+        }
+      });
+      console.log(`[pulse] ${activeCount}/${liveLinks.length} links pulsing right now (thinking=${thinking})`);
+    }
+    setInterval(pulseHeartbeat, 100);
+
+    // per-frame: position + orient a small cylinder mesh along each
+    // currently-active link, from a pool reused as pulses start/stop
+    const pulseMeshByLink = new Map();
+    const PULSE_UP_AXIS = new THREE.Vector3(0, 1, 0);
+    function makePulseMesh() {
+      const geo = new THREE.CylinderGeometry(PULSE_CYLINDER_RADIUS, PULSE_CYLINDER_RADIUS, PULSE_CYLINDER_LENGTH, 8);
+      const mat = new THREE.MeshBasicMaterial({ color: PULSE_COLOR, transparent: true, opacity: 0.92 });
+      return new THREE.Mesh(geo, mat);
+    }
+    function updatePulseMeshes() {
+      const now = performance.now();
+      const seen = new Set();
+      Graph.graphData().links.forEach(l => {
+        if (!l.__pulseActive) return;
+        const s = typeof l.source === 'object' ? l.source : null;
+        const t = typeof l.target === 'object' ? l.target : null;
+        if (!s || !t) return;
+        seen.add(l);
+
+        let mesh = pulseMeshByLink.get(l);
+        if (!mesh) {
+          mesh = makePulseMesh();
+          Graph.scene().add(mesh);
+          pulseMeshByLink.set(l, mesh);
+        }
+
+        const total = l.__pulseUntil - l.__pulseStartAt;
+        const progress = total > 0 ? Math.min(1, Math.max(0, (now - l.__pulseStartAt) / total)) : 0;
+        const sx = s.x || 0, sy = s.y || 0, sz = s.z || 0;
+        const tx = t.x || 0, ty = t.y || 0, tz = t.z || 0;
+        mesh.position.set(sx + (tx - sx) * progress, sy + (ty - sy) * progress, sz + (tz - sz) * progress);
+
+        const dir = new THREE.Vector3(tx - sx, ty - sy, tz - sz);
+        if (dir.lengthSq() > 0.0001) {
+          mesh.quaternion.setFromUnitVectors(PULSE_UP_AXIS, dir.normalize());
+        }
+      });
+
+      // release meshes for links that just stopped pulsing
+      for (const [link, mesh] of pulseMeshByLink) {
+        if (!seen.has(link)) {
+          Graph.scene().remove(mesh);
+          mesh.geometry.dispose();
+          mesh.material.dispose();
+          pulseMeshByLink.delete(link);
+        }
+      }
+      requestAnimationFrame(updatePulseMeshes);
+    }
+    requestAnimationFrame(updatePulseMeshes);
+
+    // --- chat (voice-only: no visible text input, see HUD + double-tap-space) ---
+    let chatSessionId = null;
+    const chatAnswer = document.getElementById('chat-answer');
+    const hud = document.getElementById('hud');
+    const hudRingActive = hud.querySelector('.hud-ring-active');
+
+    // model color coding — layered onto the idle look via --hud-color (see
+    // CSS); listening/thinking/speaking keep their own state colors as-is
+    const MODEL_COLORS = {
+      sonnet: '#7dd3fc', // cyan/blue — current default
+      opus: '#9b5cf6',   // deep violet
+      haiku: '#f5b942',  // amber/gold
+    };
+    let currentModel = 'sonnet';
+    function applyModelColor(model) {
+      hud.style.setProperty('--hud-color', MODEL_COLORS[model] || MODEL_COLORS.sonnet);
+    }
+    (async function loadActiveModel() {
+      try {
+        const res = await fetch('/model');
+        const data = await res.json();
+        if (data.model) {
+          currentModel = data.model;
+          applyModelColor(currentModel);
+        }
+      } catch (err) {
+        console.log('[model] failed to load active model (non-fatal):', err.message);
+      }
+    })();
+
+    // dial-style tick marks around the edge, generated once — original
+    // sci-fi-HUD touch (not a recreation of any specific prop)
+    (function buildHudTicks() {
+      const g = hud.querySelector('.hud-ticks');
+      const TICK_COUNT = 32;
+      const cx = 60, cy = 60, rInner = 54, rOuter = 59;
+      for (let i = 0; i < TICK_COUNT; i++) {
+        const angle = (i / TICK_COUNT) * Math.PI * 2;
+        const long = i % 4 === 0;
+        const r1 = long ? rInner - 3 : rInner;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('class', 'hud-tick');
+        line.setAttribute('x1', (cx + r1 * Math.cos(angle)).toFixed(2));
+        line.setAttribute('y1', (cy + r1 * Math.sin(angle)).toFixed(2));
+        line.setAttribute('x2', (cx + rOuter * Math.cos(angle)).toFixed(2));
+        line.setAttribute('y2', (cy + rOuter * Math.sin(angle)).toFixed(2));
+        if (long) line.style.strokeWidth = '2';
+        g.appendChild(line);
+      }
+    })();
+
+    // draggable HUD — click and hold, drag anywhere, it stays there (no
+    // snap-back). Switches from the default centered CSS position to
+    // explicit fixed left/top on first drag.
+    (function makeHudDraggable() {
+      let dragging = false;
+      let offsetX = 0, offsetY = 0;
+      hud.addEventListener('mousedown', (e) => {
+        dragging = true;
+        hud.classList.add('dragging');
+        const rect = hud.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        hud.style.left = `${e.clientX - offsetX}px`;
+        hud.style.top = `${e.clientY - offsetY}px`;
+        hud.style.bottom = 'auto';
+        hud.style.transform = 'none';
+      });
+      window.addEventListener('mouseup', () => {
+        dragging = false;
+        hud.classList.remove('dragging');
+      });
+    })();
+    const transcriptStrip = document.getElementById('transcript-strip');
+    const transcriptStripText = document.getElementById('transcript-strip-text');
+
+    // drives the circular HUD. Kept as `setStatus` (same name/call sites as
+    // before) per "reuse the existing status-tracking logic" — it no longer
+    // renders text, it just maps each status to a HUD visual state.
+    function setStatus(text, hudState) {
+      const state = hudState || (text ? 'thinking' : 'idle');
+      console.log(`[hud] state -> ${state}${text ? ` (${text})` : ''}`);
+      hud.classList.remove('idle', 'listening', 'thinking', 'speaking');
+      hud.classList.add(state);
+    }
+
+    function showTranscript(text) {
+      transcriptStripText.textContent = text;
+      transcriptStrip.classList.add('visible');
+    }
+
+    function hideTranscript() {
+      transcriptStrip.classList.remove('visible');
+      transcriptStripText.textContent = '';
+    }
+
+    // --- speech output (Web Speech API) ---
+    let audioUnlocked = false;
+    let pendingBriefingText = null; // set by maybeAutoBriefing() when audio isn't unlocked yet
+    let pendingAlertPrefix = null; // set by checkProactiveAlerts(), consumed once by speak()
+    let britishVoice = null;
+    let spanishVoice = null;
+
+    function pickEnglishVoice(voices) {
+      return (
+        voices.find(v => v.lang === 'en-GB' && /female/i.test(v.name)) ||
+        voices.find(v => v.lang === 'en-GB') ||
+        voices.find(v => v.lang && v.lang.startsWith('en-GB')) ||
+        voices.find(v => v.lang && v.lang.startsWith('en')) ||
+        voices[0] ||
+        null
+      );
+    }
+
+    function pickSpanishVoice(voices) {
+      // never bottom out at null while ANY voice exists — better to speak
+      // Spanish text in an English voice than to stay silent.
+      return (
+        voices.find(v => v.lang === 'es-MX') ||
+        voices.find(v => v.lang && v.lang.startsWith('es-MX')) ||
+        voices.find(v => v.lang && v.lang.startsWith('es')) ||
+        pickEnglishVoice(voices)
+      );
+    }
+
+    function refreshVoices() {
+      const voices = speechSynthesis.getVoices();
+      console.log(`[tts] ${voices.length} voice(s) available:`,
+        voices.map(v => `${v.name} (${v.lang})${v.default ? ' [default]' : ''}`));
+      if (!voices.length) {
+        console.log('[tts] no voices reported yet — waiting for onvoiceschanged');
+        return;
+      }
+      britishVoice = pickEnglishVoice(voices);
+      spanishVoice = pickSpanishVoice(voices);
+      console.log('[tts] picked english voice:', britishVoice ? `${britishVoice.name} (${britishVoice.lang})` : 'NONE');
+      console.log('[tts] picked spanish voice:', spanishVoice ? `${spanishVoice.name} (${spanishVoice.lang})` : 'NONE');
+    }
+
+    if ('speechSynthesis' in window) {
+      speechSynthesis.onvoiceschanged = refreshVoices;
+      refreshVoices();
+    }
+
+    // true for the entire duration audio is actually leaving the speakers —
+    // guards the mic against picking up Jarvis's own voice as a new command
+    // (self-listening feedback loop)
+    let speaking = false;
+    let pendingListenAfterSpeech = false;
+
+    function onSpeechEnded() {
+      speaking = false;
+      setStatus(null, 'idle');
+      if (pendingListenAfterSpeech) {
+        pendingListenAfterSpeech = false;
+        console.log(`[speech ${ts()}] starting queued listen session now that playback ended`);
+        startListening();
+      }
+    }
+
+    function speak(text, lang) {
+      if (!('speechSynthesis' in window) || !text) return;
+
+      // a pending proactive alert (Classroom deadline <24h, calendar event
+      // <30min) rides along on whatever Jarvis is about to say next —
+      // fire-once, never repeated
+      if (pendingAlertPrefix) {
+        text = `${pendingAlertPrefix} ${text}`;
+        pendingAlertPrefix = null;
+      }
+
+      const doSpeak = () => {
+        const utter = new SpeechSynthesisUtterance(text);
+        const voice = (lang === 'es' ? spanishVoice : britishVoice) || spanishVoice || britishVoice;
+        if (voice) {
+          utter.voice = voice;
+          utter.lang = voice.lang;
+        } else {
+          console.log('[tts] no voice available at all — speaking with browser default');
+          utter.lang = lang === 'es' ? 'es-MX' : 'en-GB';
+        }
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+        utter.onstart = () => {
+          console.log('[tts] playback started');
+          speaking = true;
+          // cut the mic immediately if it's somehow still open — never let
+          // recognition run while we're the ones making noise
+          if (recognition && listening) {
+            console.log(`[speech ${ts()}] stopping recognition — speech playback is starting`);
+            try { recognition.stop(); } catch (e) { /* onend will settle state */ }
+          }
+          setStatus('● speaking…', 'speaking');
+        };
+        utter.onend = () => {
+          console.log('[tts] playback finished');
+          onSpeechEnded();
+        };
+        utter.onerror = (e) => {
+          console.log('[tts] playback error:', e.error);
+          onSpeechEnded();
+        };
+        // cheap "sync to speech" touch: a brief brightness flash per word/
+        // sentence boundary, layered on top of the base rhythmic pulse —
+        // not real audio-level analysis, just a nice-to-have if the browser
+        // fires these events (Chrome does for most voices).
+        utter.onboundary = () => {
+          hudRingActive.classList.remove('hud-boundary-flash');
+          void hudRingActive.offsetWidth; // restart the CSS animation
+          hudRingActive.classList.add('hud-boundary-flash');
+        };
+        console.log(`[tts] speechSynthesis.speak() called (${utter.lang}) via`, voice ? voice.name : 'browser default', ':', JSON.stringify(text));
+        console.trace('[tts] speak() call stack');
+        speechSynthesis.speak(utter);
+      };
+
+      if (speechSynthesis.speaking || speechSynthesis.pending) {
+        console.log('[tts] speechSynthesis.cancel() called — interrupting in-flight speech');
+        console.trace('[tts] cancel() call stack');
+        speechSynthesis.cancel();
+        // Chrome/macOS: queuing a new utterance in the SAME tick right after
+        // cancel() frequently kills the NEW utterance with error "canceled" —
+        // give the engine a moment to actually flush before speaking again.
+        setTimeout(doSpeak, 50);
+      } else {
+        doSpeak();
+      }
+    }
+
+    const BOOT_GREETING = `Buenas tardes, señor. ${GRAPH.nodes.length} notas indexadas, todas en orden.`;
+
+    function unlockAudio() {
+      if (audioUnlocked || !('speechSynthesis' in window)) return;
+      audioUnlocked = true;
+      // Jarvis must stay silent until spoken to — no boot greeting spoken
+      // aloud. Chrome still requires SOME speechSynthesis.speak() call made
+      // synchronously inside a user gesture to unlock audio for the rest of
+      // the page, so fire an inaudible (volume 0) primer instead of real
+      // speech. This bypasses speak()'s status/HUD side effects entirely —
+      // it's plumbing, not an utterance Jarvis is "saying".
+      const primer = new SpeechSynthesisUtterance(' ');
+      primer.volume = 0;
+      speechSynthesis.speak(primer);
+
+      // the once-a-day morning briefing was fetched at page load (possibly
+      // before any user gesture existed, so it couldn't be spoken yet) —
+      // say it now, on the very first real interaction of the session
+      if (pendingBriefingText) {
+        const text = pendingBriefingText;
+        pendingBriefingText = null;
+        setTimeout(() => speak(truncateForSpeech(text, 5, 700), 'es'), 200);
+      }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+
+    // --- speech input (webkitSpeechRecognition) ---
+    const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let listening = false;
+    let userWantsListening = false; // false = user (or a final result) stopped it on purpose
+    let noSpeechRetries = 0;
+    const MAX_NO_SPEECH_RETRIES = 2;
+
+    function ts() {
+      return new Date().toLocaleTimeString('en-GB', { hour12: false }) + '.' +
+        String(new Date().getMilliseconds()).padStart(3, '0');
+    }
+
+    if (SpeechRecognitionImpl) {
+      recognition = new SpeechRecognitionImpl();
+      // continuous + interim: the API has no explicit "timeout" setting — Chrome's
+      // no-speech cutoff is an internal heuristic. continuous keeps the session open
+      // past short pauses instead of closing after the very first one, and interim
+      // results give live proof audio is actually being picked up (see console).
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'es-MX';
+
+      recognition.onstart = () => {
+        console.log(`[speech ${ts()}] recognition.start() fired — engine is now listening`);
+        listening = true;
+        noSpeechRetries = 0;
+        setStatus('● listening…', 'listening');
+      };
+
+      recognition.onaudiostart = () => console.log(`[speech ${ts()}] audio capture started`);
+      recognition.onsoundstart = () => console.log(`[speech ${ts()}] sound detected`);
+      recognition.onspeechstart = () => console.log(`[speech ${ts()}] speech detected — you started talking`);
+      recognition.onspeechend = () => console.log(`[speech ${ts()}] speech ended`);
+
+      recognition.onresult = (event) => {
+        if (speaking) {
+          // belt-and-suspenders: onstart already stops recognition the moment
+          // playback begins, but if a result still slips through mid-transition,
+          // never let Jarvis's own voice be treated as a command
+          console.log(`[speech ${ts()}] ignoring recognition result — currently speaking (self-listen guard)`);
+          return;
+        }
+        try {
+          let interim = '';
+          let final = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const chunk = event.results[i][0].transcript;
+            if (event.results[i].isFinal) final += chunk;
+            else interim += chunk;
+          }
+          if (interim) {
+            console.log(`[speech ${ts()}] interim:`, JSON.stringify(interim));
+            showTranscript(interim);
+          }
+          const finalText = final.trim();
+          if (finalText) {
+            console.log(`[speech ${ts()}] final transcript:`, JSON.stringify(finalText));
+            userWantsListening = false;
+            hideTranscript();
+            // hand off to the exact same function used everywhere else
+            console.log(`[speech ${ts()}] calling submitQuestion(${JSON.stringify(finalText)})`);
+            submitQuestion(finalText);
+            // stop AFTER handing off — a throw here must never block the submit
+            try {
+              recognition.stop();
+            } catch (stopErr) {
+              console.log(`[speech ${ts()}] recognition.stop() threw (non-fatal):`, stopErr.message);
+            }
+          }
+        } catch (err) {
+          console.log(`[speech ${ts()}] onresult handler threw:`, err.message, err.stack);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.log(`[speech ${ts()}] error:`, event.error);
+        if (event.error === 'no-speech' && userWantsListening && noSpeechRetries < MAX_NO_SPEECH_RETRIES) {
+          noSpeechRetries += 1;
+          console.log(`[speech ${ts()}] no-speech, auto-retrying (${noSpeechRetries}/${MAX_NO_SPEECH_RETRIES})`);
+          setStatus('● still listening…', 'listening');
+          try { recognition.start(); } catch (e) { /* onend will retry instead */ }
+          return;
+        }
+        userWantsListening = false;
+        hideTranscript();
+        setStatus(`● mic error: ${event.error}`, 'idle');
+      };
+
+      recognition.onend = () => {
+        console.log(`[speech ${ts()}] recognition ended`);
+        listening = false;
+        hideTranscript();
+        setStatus(null, 'idle');
+      };
+
+      function startListening() {
+        userWantsListening = true;
+        noSpeechRetries = 0;
+        console.log(`[speech ${ts()}] calling recognition.start()`);
+        try {
+          recognition.start();
+        } catch (e) {
+          console.log(`[speech ${ts()}] start() threw:`, e.message);
+        }
+      }
+
+      function stopListening() {
+        userWantsListening = false;
+        recognition.stop();
+      }
+
+      function toggleListening() {
+        unlockAudio();
+        if (speaking) {
+          // never start a listening session while Jarvis is talking — queue
+          // it instead so it kicks off right after playback ends (onSpeechEnded)
+          if (!pendingListenAfterSpeech) {
+            pendingListenAfterSpeech = true;
+            console.log(`[speech ${ts()}] double-tap while speaking — queued, will start listening once playback ends`);
+          }
+          return;
+        }
+        if (listening) {
+          stopListening();
+          return;
+        }
+        console.log(`[speech ${ts()}] double-tap detected`);
+        startListening();
+      }
+
+      // trigger: two spacebar taps within ~400ms (voice-only UI, no button)
+      const DOUBLE_TAP_WINDOW_MS = 400;
+      let lastSpaceTapAt = 0;
+      document.addEventListener('keydown', (e) => {
+        if (e.code !== 'Space' || e.repeat) return;
+        const tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        const now = performance.now();
+        if (now - lastSpaceTapAt <= DOUBLE_TAP_WINDOW_MS) {
+          e.preventDefault();
+          lastSpaceTapAt = 0;
+          toggleListening();
+        } else {
+          lastSpaceTapAt = now;
+        }
+      });
+    } else {
+      console.log('[speech] SpeechRecognition not supported in this browser (use Chrome)');
+    }
+
+    // 4+ source notes: light up the whole cluster, no camera fly, no forced panel.
+    function highlightCluster(nodeIds) {
+      clearInterval(autoRotateInterval);
+      selectedId = -1; // sentinel: dims non-members without enlarging any single node
+      highlightNodes = new Set(nodeIds);
+      highlightLinks = new Set();
+      GRAPH.links.forEach(l => {
+        const s = typeof l.source === 'object' ? l.source.id : l.source;
+        const t = typeof l.target === 'object' ? l.target.id : l.target;
+        if (highlightNodes.has(s) && highlightNodes.has(t)) highlightLinks.add(`${s}-${t}`);
+      });
+      document.getElementById('panel').classList.remove('open');
+      Graph.nodeColor(Graph.nodeColor());
+      Graph.linkColor(Graph.linkColor());
+      Graph.linkWidth(Graph.linkWidth());
+      Graph.linkDirectionalParticles(Graph.linkDirectionalParticles());
+    }
+
+    // fewer than 4 source notes: fly to the top match, light it + its direct
+    // neighbors, open its panel — "prove" the answer came from that note.
+    function proveAnswer(nodeIds) {
+      if (!nodeIds.length) {
+        closePanel();
+        return;
+      }
+      if (nodeIds.length >= 4) {
+        highlightCluster(nodeIds);
+        return;
+      }
+      const topNode = GRAPH.nodes[nodeIds[0]];
+      if (topNode) handleNodeClick(topNode);
+    }
+
+    // keep spoken answers short — the full text is already on screen.
+    function truncateForSpeech(text, maxSentences = 2, maxChars = 280) {
+      if (!text) return text;
+      const sentences = text.match(/[^.!?]+[.!?]+(\s+|$)/g);
+      let out = sentences ? sentences.slice(0, maxSentences).join('').trim() : text;
+      if (out.length > maxChars) out = out.slice(0, maxChars).trim() + '…';
+      return out || text.slice(0, maxChars);
+    }
+
+    function renderAnswer(answerText, nodeIds) {
+      chatAnswer.innerHTML = '';
+      const textEl = document.createElement('div');
+      textEl.textContent = answerText;
+      chatAnswer.appendChild(textEl);
+
+      if (nodeIds.length) {
+        const sources = document.createElement('div');
+        sources.className = 'sources';
+        nodeIds.forEach(id => {
+          const n = GRAPH.nodes[id];
+          if (!n) return;
+          const chip = document.createElement('span');
+          chip.className = 'source-chip';
+          chip.style.color = groupColor[n.group];
+          chip.textContent = n.label;
+          chip.onclick = () => handleNodeClick(n);
+          sources.appendChild(chip);
+        });
+        chatAnswer.appendChild(sources);
+      }
+      chatAnswer.classList.add('visible');
+    }
+
+    const REMEMBER_TRIGGER_RE = /^\s*(recu[eé]rdate?\s+que|recu[eé]rdame\s+que|recuerda\s+que)\b/i;
+    // checked BEFORE PROJECT_UPDATE_TRIGGER_RE — "cambia al proyecto X" must
+    // never be swallowed by the business-tracker's "proyecto <nombre>: ..." trigger
+    const WORKSPACE_SWITCH_TRIGGER_RE = /^\s*cambia\s+al?\s+proyecto\s+/i;
+    const BRIEFING_TRIGGER_RE = /^\s*(buenos\s+d[ií]as|dame\s+mi\s+resumen)\b/i;
+    const MODEL_SWITCH_TRIGGER_RE = /(?:cambia\s+a[l]?\s+modelo|usa\s+(?:el\s+)?modelo|usa)\s+(?<model>sonnet|opus|haiku)\b/i;
+    const WORKSPACE_DELETE_TRIGGER_RE = /^\s*elimina\s+el\s+proyecto\s+(.+)$/i;
+    const INLINE_PASSWORD_RE = /^(.*?)\s+contrase[ñn]a\s+(.+)$/i;
+    let awaitingDeletePassword = false;
+    const PROJECT_UPDATE_TRIGGER_RE = /^\s*proyecto\s+/i;
+    const PROJECT_SUMMARY_TRIGGER_RE = /(c[oó]mo\s+van|resumen)[^.?!]{0,25}proyecto/i;
+    const CLASSROOM_TRIGGER_RE = /tareas?\b.{0,25}\b(pendientes|classroom)\b|classroom\b.{0,25}\btareas?\b/i;
+    const DUNK_STATS_TRIGGER_RE = /(jugadores|estad[ií]sticas)\b.{0,20}\bdunk\b|dunk\b.{0,20}\b(jugadores|estad[ií]sticas)\b/i;
+    const CALENDAR_QUERY_TRIGGER_RE = /qu[eé]\b.{0,15}\b(calendario|agendado)\b|calendario\b.{0,15}\bqu[eé]\b/i;
+    // anchored + requires "para" so a real query like "¿qué tengo agendado?"
+    // (caught above) never falls through and gets misread as a create command
+    const CALENDAR_CREATE_TRIGGER_RE = /^\s*agenda\s+.+\bpara\b/i;
+    const FILE_SEARCH_TRIGGER_RE = /^\s*busca\s+(el\s+archivo|en\s+mis?\s+documentos?|en\s+mi\s+escritorio)\b/i;
+    const FILE_READ_TRIGGER_RE = /^\s*(l[eé]eme|abre)\s+el\s+archivo\b/i;
+    // checked AFTER FILE_READ_TRIGGER_RE in the dispatch chain, so "abre el
+    // archivo X" is claimed by the file-read trigger first
+    const OPEN_APP_TRIGGER_RE = /^\s*(abre|ábreme)\s+/i;
+    const RECEIPT_TRIGGER_RE = /^\s*crea\s+un\s+recibo\s+(de\s+)?/i;
+    const REPORT_TRIGGER_RE = /^\s*haz\s+un\s+reporte\s+(de\s+)?/i;
+    const LETTER_TRIGGER_RE = /^\s*redacta\s+una\s+carta\s+(para\s+)?/i;
+
+    async function rememberNote(rawText) {
+      console.log('[remember] capturing:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● guardando…', 'thinking');
+
+      try {
+        const res = await fetch('/remember', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        // a single "recuerda que" can now produce many new nodes (its own
+        // note plus every extracted entity, replinked to the project core)
+        // — reload the whole workspace graph rather than splicing in one
+        // node, then fly to the note's own node by label.
+        await loadWorkspaceGraph();
+        const newNode = GRAPH.nodes.find(n => n.label === data.node.label) || data.node;
+        renderAnswer(data.message, [newNode.id]);
+        speak(truncateForSpeech(data.message), 'es');
+        setTimeout(() => handleNodeClick(newNode), 200);
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function switchModel(rawText) {
+      const m = rawText.match(MODEL_SWITCH_TRIGGER_RE);
+      const modelName = (m && m.groups && m.groups.model || '').toLowerCase();
+      console.log('[model] switch requested:', modelName);
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● cambiando de modelo…', 'thinking');
+
+      try {
+        const res = await fetch('/model/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: modelName }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+        if (data.ok) {
+          currentModel = data.model;
+          applyModelColor(currentModel);
+        }
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function deleteWorkspace(rawText) {
+      const dm = rawText.match(WORKSPACE_DELETE_TRIGGER_RE);
+      let target = dm ? dm[1].trim() : rawText.trim();
+      let password = null;
+      const pm = target.match(INLINE_PASSWORD_RE);
+      if (pm) {
+        target = pm[1].trim();
+        password = pm[2].trim();
+      }
+
+      console.log('[workspace] delete requested:', JSON.stringify(target), password ? '(with inline password)' : '');
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● procesando…', 'thinking');
+
+      try {
+        const res = await fetch('/workspaces/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: target, password }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+        awaitingDeletePassword = !!data.needs_password;
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message), 'es');
+        if (data.deleted) await loadWorkspaceGraph();
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function confirmDeletePassword(rawText) {
+      awaitingDeletePassword = false;
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● verificando…', 'thinking');
+
+      try {
+        const res = await fetch('/workspaces/delete/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: rawText.trim() }),
+        });
+        const data = await res.json();
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message), 'es');
+        if (data.deleted) await loadWorkspaceGraph();
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function morningBriefing(rawText) {
+      console.log('[briefing] requested:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● preparando resumen…', 'thinking');
+
+      try {
+        const res = await fetch('/briefing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message, 5, 700), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    // once-a-day auto briefing on first load — checked via localStorage,
+    // not spoken here directly if audio isn't unlocked yet (no user gesture
+    // has happened on a cold page load), queued for unlockAudio() instead
+    async function maybeAutoBriefing() {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        if (localStorage.getItem('jarvis_last_briefing_day') === today) return;
+        localStorage.setItem('jarvis_last_briefing_day', today);
+
+        const res = await fetch('/briefing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: 'buenos días (resumen automático al cargar la página)' }),
+        });
+        const data = await res.json();
+        if (!data.ok) return;
+
+        renderAnswer(data.message, []);
+        if (audioUnlocked) {
+          speak(truncateForSpeech(data.message, 5, 700), 'es');
+        } else {
+          pendingBriefingText = data.message;
+        }
+      } catch (err) {
+        console.log('[briefing] auto-check failed (non-fatal):', err.message);
+      }
+    }
+
+    async function switchWorkspace(rawText) {
+      const name = rawText.replace(WORKSPACE_SWITCH_TRIGGER_RE, '').trim();
+      console.log('[workspace] switching to:', JSON.stringify(name));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● cambiando de proyecto…', 'thinking');
+
+      try {
+        const res = await fetch('/workspaces/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        if (data.ok) {
+          await loadWorkspaceGraph(data.slug);
+        }
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function projectUpdate(rawText) {
+      console.log('[project] updating:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● actualizando proyecto…', 'thinking');
+
+      try {
+        const res = await fetch('/project-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function projectSummary(rawText) {
+      console.log('[project] summarizing all projects');
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● revisando proyectos…', 'thinking');
+
+      try {
+        const res = await fetch('/project-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message, 4, 600), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    function renderClassroomAnswer(summaryText, courses) {
+      chatAnswer.innerHTML = '';
+      const summaryEl = document.createElement('div');
+      summaryEl.textContent = summaryText;
+      chatAnswer.appendChild(summaryEl);
+
+      if (courses && courses.length) {
+        (courses || []).forEach(course => {
+          const heading = document.createElement('div');
+          heading.className = 'file-heading';
+          heading.textContent = course.course_name;
+          chatAnswer.appendChild(heading);
+
+          const list = document.createElement('pre');
+          list.className = 'file-content';
+          list.textContent = course.assignments
+            .map(a => `- ${a.title} (vence: ${a.due_label})`)
+            .join('\n');
+          chatAnswer.appendChild(list);
+        });
+      }
+      chatAnswer.classList.add('visible');
+    }
+
+    async function dunkStats(rawText) {
+      console.log('[dunk] fetching player stats:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● revisando DUNK…', 'thinking');
+
+      try {
+        const res = await fetch('/dunk-stats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message, 6, 800), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function classroomAssignments(rawText) {
+      console.log('[classroom] fetching pending assignments:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● revisando classroom…', 'thinking');
+
+      try {
+        const res = await fetch('/classroom-assignments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        if (data.ok) {
+          renderClassroomAnswer(data.message, data.courses);
+        } else {
+          renderAnswer(data.message, []);
+        }
+        speak(truncateForSpeech(data.message, 6, 800), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    function renderCalendarAnswer(summaryText, daysGroups) {
+      chatAnswer.innerHTML = '';
+      const summaryEl = document.createElement('div');
+      summaryEl.textContent = summaryText;
+      chatAnswer.appendChild(summaryEl);
+
+      if (daysGroups && daysGroups.length) {
+        (daysGroups || []).forEach(day => {
+          const heading = document.createElement('div');
+          heading.className = 'file-heading';
+          heading.textContent = day.day_label;
+          chatAnswer.appendChild(heading);
+
+          const list = document.createElement('pre');
+          list.className = 'file-content';
+          list.textContent = day.events
+            .map(e => `- ${e.time_label}: ${e.summary}`)
+            .join('\n');
+          chatAnswer.appendChild(list);
+        });
+      }
+      chatAnswer.classList.add('visible');
+    }
+
+    async function calendarQuery(rawText) {
+      console.log('[calendar] fetching upcoming events:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● revisando calendario…', 'thinking');
+
+      try {
+        const res = await fetch('/calendar-events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        if (data.ok) {
+          renderCalendarAnswer(data.message, data.days);
+        } else {
+          renderAnswer(data.message, []);
+        }
+        speak(truncateForSpeech(data.message, 6, 800), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function calendarCreate(rawText) {
+      console.log('[calendar] creating event:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● agendando…', 'thinking');
+
+      try {
+        const res = await fetch('/calendar-create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message, 3, 400), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    function renderFileAnswer(summaryText, name, content) {
+      chatAnswer.innerHTML = '';
+      const summaryEl = document.createElement('div');
+      summaryEl.textContent = summaryText;
+      chatAnswer.appendChild(summaryEl);
+
+      if (name && content != null) {
+        const heading = document.createElement('div');
+        heading.className = 'file-heading';
+        heading.textContent = name;
+        chatAnswer.appendChild(heading);
+
+        const pre = document.createElement('pre');
+        pre.className = 'file-content';
+        pre.textContent = content;
+        chatAnswer.appendChild(pre);
+      }
+      chatAnswer.classList.add('visible');
+    }
+
+    async function fileSearch(rawText) {
+      console.log('[files] searching:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● buscando archivos…', 'thinking');
+
+      try {
+        const res = await fetch('/files-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message, 4, 500), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function fileRead(rawText) {
+      console.log('[files] reading:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● leyendo archivo…', 'thinking');
+
+      try {
+        const res = await fetch('/files-read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        if (data.ok) {
+          renderFileAnswer(data.message, data.name, data.content);
+        } else {
+          renderAnswer(data.message, []);
+        }
+        speak(truncateForSpeech(data.message), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function pollDocumentJob(jobId) {
+      try {
+        const res = await fetch(`/documents/status?job_id=${encodeURIComponent(jobId)}`);
+        const job = await res.json();
+        if (job.status === 'pending') {
+          setTimeout(() => pollDocumentJob(jobId), 2000);
+          return;
+        }
+        setStatus(null, 'idle');
+        renderAnswer(job.message, []);
+        speak(truncateForSpeech(job.message), 'es');
+      } catch (err) {
+        console.log('[documents] poll failed:', err.message);
+        setTimeout(() => pollDocumentJob(jobId), 3000);
+      }
+    }
+
+    async function createDocumentJob(rawText, kind) {
+      console.log(`[documents] creating ${kind}:`, JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● redactando…', 'thinking');
+
+      try {
+        const res = await fetch('/documents/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind, brief: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          setStatus(null, 'idle');
+          return;
+        }
+
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message), 'es');
+        setTimeout(() => pollDocumentJob(data.job_id), 2000);
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function openApp(rawText) {
+      console.log('[open-app] request:', JSON.stringify(rawText));
+      unlockAudio();
+      chatAnswer.classList.remove('visible');
+      setStatus('● abriendo aplicación…', 'thinking');
+
+      try {
+        const res = await fetch('/open-app', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawText }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+          return;
+        }
+
+        renderAnswer(data.message, []);
+        speak(truncateForSpeech(data.message), 'es');
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    async function checkProactiveAlerts() {
+      try {
+        const res = await fetch('/alerts/check');
+        const data = await res.json();
+        if (data.alert) pendingAlertPrefix = data.alert;
+      } catch (err) {
+        console.log('[alerts] check failed (non-fatal):', err.message);
+      }
+    }
+
+    async function submitQuestion(question) {
+      question = (question || '').trim();
+      console.log('[submit] submitQuestion() fired with:', JSON.stringify(question));
+      if (!question) return;
+      unlockAudio();
+      await checkProactiveAlerts(); // every interaction — cheap, and never blocks on failure
+
+      // a password-gated deletion is waiting on exactly this next utterance
+      // — it takes priority over every other trigger, since a raw password
+      // could otherwise coincidentally look like something else
+      if (awaitingDeletePassword) {
+        await confirmDeletePassword(question);
+        return;
+      }
+
+      if (REMEMBER_TRIGGER_RE.test(question)) {
+        await rememberNote(question);
+        return;
+      }
+      if (WORKSPACE_DELETE_TRIGGER_RE.test(question)) {
+        await deleteWorkspace(question);
+        return;
+      }
+      if (MODEL_SWITCH_TRIGGER_RE.test(question)) {
+        await switchModel(question);
+        return;
+      }
+      if (WORKSPACE_SWITCH_TRIGGER_RE.test(question)) {
+        await switchWorkspace(question);
+        return;
+      }
+      if (BRIEFING_TRIGGER_RE.test(question)) {
+        await morningBriefing(question);
+        return;
+      }
+      if (PROJECT_SUMMARY_TRIGGER_RE.test(question)) {
+        await projectSummary(question);
+        return;
+      }
+      if (PROJECT_UPDATE_TRIGGER_RE.test(question)) {
+        await projectUpdate(question);
+        return;
+      }
+      if (CLASSROOM_TRIGGER_RE.test(question)) {
+        await classroomAssignments(question);
+        return;
+      }
+      if (DUNK_STATS_TRIGGER_RE.test(question)) {
+        await dunkStats(question);
+        return;
+      }
+      if (CALENDAR_QUERY_TRIGGER_RE.test(question)) {
+        await calendarQuery(question);
+        return;
+      }
+      if (CALENDAR_CREATE_TRIGGER_RE.test(question)) {
+        await calendarCreate(question);
+        return;
+      }
+      if (FILE_READ_TRIGGER_RE.test(question)) {
+        await fileRead(question);
+        return;
+      }
+      if (FILE_SEARCH_TRIGGER_RE.test(question)) {
+        await fileSearch(question);
+        return;
+      }
+      if (OPEN_APP_TRIGGER_RE.test(question)) {
+        await openApp(question);
+        return;
+      }
+      if (RECEIPT_TRIGGER_RE.test(question)) {
+        await createDocumentJob(question, 'receipt');
+        return;
+      }
+      if (REPORT_TRIGGER_RE.test(question)) {
+        await createDocumentJob(question, 'report');
+        return;
+      }
+      if (LETTER_TRIGGER_RE.test(question)) {
+        await createDocumentJob(question, 'letter');
+        return;
+      }
+
+      chatAnswer.classList.remove('visible');
+      setStatus('● thinking…', 'thinking');
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, session_id: chatSessionId }),
+        });
+        const data = await res.json();
+        if (data.session_id) chatSessionId = data.session_id;
+
+        if (data.error) {
+          renderAnswer(`Error: ${data.error}`, []);
+        } else {
+          renderAnswer(data.answer, data.nodes || []);
+          proveAnswer(data.nodes || []);
+          speak(truncateForSpeech(data.answer), data.lang);
+        }
+      } catch (err) {
+        renderAnswer(`Error: ${err.message}`, []);
+      } finally {
+        setStatus(null, 'idle');
+      }
+    }
+
+    // shown immediately; spoken once the first click/keypress unlocks audio (see unlockAudio)
+    renderAnswer(BOOT_GREETING, []);
+    maybeAutoBriefing();
+  </script>
+</body>
+</html>

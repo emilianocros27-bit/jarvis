@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Secrets / credentials
+token.json
+credentials/
+*.env
+*.env.*
+
+# OS
+.DS_Store
+
+# Node
+node_modules/
+workspaces/node-modules/
+workspaces/node-modules-2/
