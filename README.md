@@ -20,4 +20,7 @@ El servidor detecta automáticamente la variable `PORT` que proporcionan Render,
 - Build command: `pip install -r requirements.txt`
 - Start command: `python server.py`
 
+En Render, basta con crear un **Blueprint** desde este repositorio: `render.yaml`
+incluye esa configuración.
+
 No subas `credentials/` ni `token.json`: están ignorados intencionalmente. Las integraciones de Google y Firebase requieren que sus credenciales se configuren de forma segura en el entorno del host. La función de chat también invoca la CLI local de Claude (`claude -p`), por lo que no funcionará en un hosting estándar hasta que se sustituya por una integración de servidor compatible.

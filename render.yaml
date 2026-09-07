@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: jarvis
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    healthCheckPath: /
